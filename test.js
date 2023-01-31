@@ -40,10 +40,10 @@ const excludeHighKarmaChallegeSubplebbit = {
       {
         path: path.join(__dirname, 'challenges', 'text-math'),
         options: {difficulty: 3},
-        // exclude if the user match any one item in the array
+        // exclude if the author match any one item in the array
         exclude: [
-          {postScore: 100, replyScore: 100}, // exclude a user that has more than 100 post score AND 100 reply score
-          {firstCommentTimestamp: Date.now() - 1000*60*60*24*100} // exclude a user with account age older than 100 days
+          {postScore: 100, replyScore: 100}, // exclude author that has more than 100 post score AND 100 reply score
+          {firstCommentTimestamp: Date.now() - 1000*60*60*24*100} // exclude author with account age older than 100 days
         ]
       }
     ]
