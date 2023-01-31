@@ -8,7 +8,7 @@ const textMathChallegeSubplebbit = {
     challenges: [
       {
         path: path.join(__dirname, 'challenges', 'text-math'),
-        difficulty: 3
+        options: {difficulty: 3}
       }
     ]
   }
