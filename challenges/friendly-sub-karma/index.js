@@ -22,7 +22,7 @@ const getCommentUpdate = async (ipnsName) => {
   }
 }
 
-const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToCheck = '3'} = {}, challengeAnwser) => {
+const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToCheck = '3'} = {}, challengeAnswer) => {
   maxCidsToCheck = Number(maxCidsToCheck)
   friendlySubAddresses = friendlySubAddresses.split(',')
   if (!friendlySubAddresses.length) {
@@ -33,7 +33,7 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
   // parse comment cids submitted by author
   let commentCids = []
   try {
-    commentCids = JSON.parse(challengeAnwser) // challengeAnwser is a JSON array of comment cids
+    commentCids = JSON.parse(challengeAnswer) // challengeAnswer is a JSON array of comment cids
   }
   catch (e) {}
   // author didn't provide comment cids
