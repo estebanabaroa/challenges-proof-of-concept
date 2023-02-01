@@ -16,15 +16,21 @@ const getCommentUpdate = async (ipnsName) => {
     author: {
       subplebbit: {
         postScore: 100,
-        replyScore: 100
+        replyScore: 100,
+        firstCommentTimestamp: Date.now() - 1000*60*60*24*999
       }
     }
   }
 }
 
-const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToCheck = '3'} = {}, challengeAnswer) => {
+const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToCheck = '3', firstCommentTimestamp = '', postScore = '', replyScore = ''} = {}, challengeAnswer) => {
+  // parse options strings
   maxCidsToCheck = Number(maxCidsToCheck)
   friendlySubAddresses = friendlySubAddresses.split(',')
+  firstCommentTimestamp = firstCommentTimestamp !== '' && Number(firstCommentTimestamp)
+  postScore = postScore !== '' && Number(postScore)
+  replyScore = replyScore !== '' && Number(replyScore)
+
   if (!friendlySubAddresses.length) {
     throw Error('no friendly sub addresses')
   }
@@ -73,18 +79,24 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
     commentsInFriendlySubs[i].update = await getCommentUpdate(commentsInFriendlySubs[i].ipnsName)
   }
 
-  const commentsWithMinimumKarma = []
+  // filter comments with minimum karma based on the challenge karma options
+  const commentsWithMinimumKarmaAndAge = []
   for (const comment of commentsInFriendlySubs) {
-    if (comment.update.author.subplebbit.postScore > 50) {
-      commentsWithMinimumKarma.push(comment)
+    // an author must match ALL defined filters
+    if (
+      (postScore === undefined || comment.update.author.subplebbit.postScore >= postScore) &&
+      (replyScore === undefined || comment.update.author.subplebbit.replyScore >= replyScore) &&
+      (firstCommentTimestamp === undefined || comment.update.author.subplebbit.firstCommentTimestamp <= firstCommentTimestamp)
+    ) {
+      commentsWithMinimumKarmaAndAge.push(comment)
     }
   }
 
   // author doesn't have the minimum karma
-  if (!commentsWithMinimumKarma.length) {
+  if (!commentsWithMinimumKarmaAndAge.length) {
     return {
       success: false,
-      error: `Author didn't provide any comment cids with minimum karma.`
+      error: `Author didn't provide any comment cids with minimum karma and age.`
     }
   }
 

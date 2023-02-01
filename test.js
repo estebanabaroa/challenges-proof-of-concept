@@ -49,14 +49,17 @@ const excludeHighKarmaChallegeSubplebbit = {
     ]
   }
 }
-const friendlySubKarmaChallegeSubplebbit = {
-  title: 'friendly sub karma challenge subplebbit',
+const friendlySubKarmaAndAgeChallegeSubplebbit = {
+  title: 'friendly sub karma AND age challenge subplebbit',
   challenges: [
     {
       path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
       options: {
         friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
-        maxCidsToCheck: '3'
+        maxCidsToCheck: '3',
+        // must match BOTH filters
+        firstCommentTimestamp: String(Date.now() - 1000*60*60*24*100),
+        postScore: '100',
       }
     }
   ],
@@ -68,7 +71,35 @@ const friendlySubKarmaChallegeSubplebbit = {
     ]
   }
 }
-const subplebbits = [textMathChallegeSubplebbit, captchaAndMathChallegeSubplebbit, excludeHighKarmaChallegeSubplebbit, friendlySubKarmaChallegeSubplebbit]
+const friendlySubKarmaOrAgeChallegeSubplebbit = {
+  title: 'friendly sub karma OR age challenge subplebbit',
+  challenges: [
+    {
+      path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
+      options: {
+        friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
+        maxCidsToCheck: '3',
+        postScore: '100',
+      }
+    },
+    {
+      path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
+      options: {
+        friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
+        maxCidsToCheck: '3',
+        firstCommentTimestamp: String(Date.now() - 1000*60*60*24*100),
+      }
+    }
+  ],
+  settings: {
+    challenges: [
+      {
+        path: path.join(__dirname, 'challenges', 'auto-fail'),
+      }
+    ]
+  }
+}
+const subplebbits = [textMathChallegeSubplebbit, captchaAndMathChallegeSubplebbit, excludeHighKarmaChallegeSubplebbit, friendlySubKarmaAndAgeChallegeSubplebbit]
 
 // define mock Author instances
 const highKarmaAuthor = {address: 'high-karma.eth'}
@@ -82,10 +113,12 @@ const subplebbitAuthors = {
   }
 }
 
+// define mock prechallenge answers
 const prechallengeAnswers = {
   [highKarmaAuthor.address]: {
     // list of comment cids to use as karma minimum post score
-    [friendlySubKarmaChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...'])
+    [friendlySubKarmaAndAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...']),
+    [friendlySubKarmaOrAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...'])
   }
 }
 
@@ -94,7 +127,7 @@ const prechallengeAnswers = {
   for (const author of authors) {
     console.log('')
     console.log('')
-    console.log('-- author ' + author.address + ':')
+    console.log('--', 'author ' + author.address + ':')
     console.log('')
 
     for (const subplebbit of subplebbits) {
