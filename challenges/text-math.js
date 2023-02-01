@@ -30,8 +30,9 @@ const getChallengeString = (minNumber, maxNumber, operators) => {
 
 const getChallenge = async ({difficulty} = {}) => {
   if (!difficulty) {
-  	difficulty = 1
+  	difficulty = '1'
   }
+  difficulty = Number(difficulty)
 
   let challenge
   if (difficulty === 1) {
