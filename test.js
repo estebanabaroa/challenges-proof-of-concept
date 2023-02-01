@@ -28,7 +28,7 @@ const captchaAndMathChallegeSubplebbit = {
       },
       {
         path: path.join(__dirname, 'challenges', 'text-math'),
-        options: {difficulty: 1}
+        options: {difficulty: '1'}
       }
     ]
   }
