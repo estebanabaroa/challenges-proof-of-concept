@@ -1,4 +1,5 @@
 // require('util').inspect.defaultOptions.maxStringLength = 50
+require('util').inspect.defaultOptions.depth = null
 const path = require('path')
 
 // define mock Subplebbit instances
@@ -51,7 +52,7 @@ const excludeHighKarmaChallegeSubplebbit = {
 }
 const friendlySubKarmaAndAgeChallegeSubplebbit = {
   title: 'friendly sub karma AND age challenge subplebbit',
-  challenges: [
+  prechallenges: [
     {
       path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
       options: {
@@ -67,13 +68,18 @@ const friendlySubKarmaAndAgeChallegeSubplebbit = {
     challenges: [
       {
         path: path.join(__dirname, 'challenges', 'auto-fail'),
+        exclude: [
+          // exclude any author that passed subplebbit.prechallenges[0] OR challenges subplebbit.prechallenges[1] AND subplebbit.prechallenges[2]
+          {prechallenges: [0]},
+          {prechallenges: [1, 2]},
+        ]
       }
     ]
   }
 }
 const friendlySubKarmaOrAgeChallegeSubplebbit = {
   title: 'friendly sub karma OR age challenge subplebbit',
-  challenges: [
+  prechallenges: [
     {
       path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
       options: {
@@ -95,11 +101,22 @@ const friendlySubKarmaOrAgeChallegeSubplebbit = {
     challenges: [
       {
         path: path.join(__dirname, 'challenges', 'auto-fail'),
+        exclude: [
+          // exclude any author that passed subplebbit.prechallenges[0] OR challenges subplebbit.prechallenges[1] AND subplebbit.prechallenges[2]
+          {prechallenges: [0]},
+          {prechallenges: [1, 2]},
+        ]
       }
     ]
   }
 }
-const subplebbits = [textMathChallegeSubplebbit, captchaAndMathChallegeSubplebbit, excludeHighKarmaChallegeSubplebbit, friendlySubKarmaAndAgeChallegeSubplebbit]
+const subplebbits = [
+  // textMathChallegeSubplebbit, 
+  // captchaAndMathChallegeSubplebbit, 
+  // excludeHighKarmaChallegeSubplebbit, 
+  // friendlySubKarmaAndAgeChallegeSubplebbit, 
+  friendlySubKarmaOrAgeChallegeSubplebbit
+]
 
 // define mock Author instances
 const highKarmaAuthor = {address: 'high-karma.eth'}
@@ -132,19 +149,23 @@ const prechallengeAnswers = {
 
     for (const subplebbit of subplebbits) {
       const challenges = []
-      const successes = []
-      const failures = []
+      const challengeSuccesses = []
+      const challengeFailures = []
+      const prechallenges = [] // maybe call this prechallengeVerifications
+      const prechallengeSuccesses = []
+      const prechallengeFailures = []
 
       // prechallenges
-      for (const subplebbitChallenge of subplebbit.challenges || []) {
+      for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
         const challengeAnswer = prechallengeAnswers[author.address]?.[subplebbit.title]
-        const {getChallengeVerification} = require(subplebbitChallenge.path)
-        const challengeVerification = await getChallengeVerification(subplebbitChallenge.options, challengeAnswer)
+        const {getChallengeVerification} = require(subplebbitPrechallenge.path)
+        const challengeVerification = await getChallengeVerification(subplebbitPrechallenge.options, challengeAnswer)
+        prechallenges.push(challengeVerification)
         if (challengeVerification.success === false) {
-          failures.push(subplebbit.title + ': ' + challengeVerification.error)
+          prechallengeFailures.push(subplebbit.title + ': ' + challengeVerification.error)
         }
         else if (challengeVerification.success === true) {
-          successes.push(subplebbit.title)
+          prechallengeSuccesses.push(subplebbit.title)
         }
       }
 
@@ -156,31 +177,44 @@ const prechallengeAnswers = {
         if (shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor)) {
           continue
         }
+        if (shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges)) {
+          continue
+        }
 
         // get the getChallenge function
         const {getChallenge} = require(subplebbitChallenge.path)
 
         // call the getChallenge function using the options of subplebbit.challenges[i]
         const challenge = await getChallenge(subplebbitChallenge.options)
+        challenges.push(challenge)
         if (challenge.success === false) {
-          failures.push(subplebbit.title + ': ' + challenge.error)
+          challengeFailures.push(subplebbit.title + ': ' + challenge.error)
         }
         else if (challenge.success === true) {
-          successes.push(subplebbit.title)
-        }
-        else {
-          challenges.push(challenge)
+          challengeSuccesses.push(subplebbit.title)
         }
       }
 
       console.log('----', subplebbit.title + ':')
       console.log('')
-      console.log('challenges:', challenges)
-      if (successes.length) {
-        console.log('successes:', successes)
+      if (prechallenges.length) {
+        console.log('prechallenges:', prechallenges)
       }
-      if (failures.length) {
-        console.log('failures:', failures)
+      if (prechallengeSuccesses.length) {
+        console.log('prechallengeSuccesses:', prechallengeSuccesses)
+      }
+      if (prechallengeFailures.length) {
+        console.log('prechallengeFailures:', prechallengeFailures)
+      }
+      console.log('')
+      if (challenges.length) {
+        console.log('challenges:', challenges)
+      }
+      if (challengeSuccesses.length) {
+        console.log('challengeSuccesses:', challengeSuccesses)
+      }
+      if (challengeFailures.length) {
+        console.log('challengeFailures:', challengeFailures)
       }
       console.log('')
     }
@@ -200,6 +234,36 @@ function shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor) {
       (!exclude.replyScore || exclude.replyScore < subplebbitAuthor.replyScore) &&
       (!exclude.firstCommentTimestamp || exclude.firstCommentTimestamp > subplebbitAuthor.firstCommentTimestamp)
     ) {
+      return true
+    }
+  }
+  return false
+}
+
+function shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges) {
+  console.log({subplebbitChallenge, prechallenges})
+  if (!prechallenges || !subplebbitChallenge.exclude) {
+    return false
+  }
+
+  // if match any of the exclude array, should exclude
+  for (const exclude of subplebbitChallenge.exclude) {
+
+    // has no prechallenge exclude rules
+    if (!exclude.prechallenges?.length) {
+      continue
+    }
+
+    // if any of exclude.prechallenges failed, don't exclude
+    let shouldExclude = true
+    for (const prechallengeIndex of exclude.prechallenges || []) {
+      if (prechallenges?.[prechallengeIndex]?.success !== true) {
+        shouldExclude = false
+      }
+    }
+
+    // if all exclude.prechallenges succeeded, should exclude
+    if (shouldExclude) {
       return true
     }
   }

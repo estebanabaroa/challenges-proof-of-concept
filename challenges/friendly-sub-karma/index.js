@@ -30,6 +30,7 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
   firstCommentTimestamp = firstCommentTimestamp !== '' && Number(firstCommentTimestamp)
   postScore = postScore !== '' && Number(postScore)
   replyScore = replyScore !== '' && Number(replyScore)
+  // console.log({maxCidsToCheck, friendlySubAddresses, firstCommentTimestamp, postScore, replyScore, challengeAnswer})
 
   if (!friendlySubAddresses.length) {
     throw Error('no friendly sub addresses')
@@ -84,9 +85,9 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
   for (const comment of commentsInFriendlySubs) {
     // an author must match ALL defined filters
     if (
-      (postScore === undefined || comment.update.author.subplebbit.postScore >= postScore) &&
-      (replyScore === undefined || comment.update.author.subplebbit.replyScore >= replyScore) &&
-      (firstCommentTimestamp === undefined || comment.update.author.subplebbit.firstCommentTimestamp <= firstCommentTimestamp)
+      (postScore === false || comment.update.author.subplebbit.postScore >= postScore) &&
+      (replyScore === false || comment.update.author.subplebbit.replyScore >= replyScore) &&
+      (firstCommentTimestamp === false || comment.update.author.subplebbit.firstCommentTimestamp <= firstCommentTimestamp)
     ) {
       commentsWithMinimumKarmaAndAge.push(comment)
     }
