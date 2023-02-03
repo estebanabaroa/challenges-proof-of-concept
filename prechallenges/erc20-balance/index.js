@@ -13,7 +13,7 @@ const verifyAuthorAddress = (publication, chainTicker) => {
     // return true
   }
   if (wallet?.signature) {
-    // validate if wallet.signature matches JSON {domainSeparator:"plebbit-author-address",authorAddress:"${authorAddress}"}
+    // validate if wallet.signature matches JSON {domainSeparator:"plebbit-author-wallet",authorAddress:"${authorAddress}"}
     return true
   }
   return false
