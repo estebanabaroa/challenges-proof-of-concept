@@ -181,6 +181,29 @@ const erc20BalanceChallegeSubplebbit = {
     challenges: []
   }
 }
+const erc20PaymentChallegeSubplebbit = {
+  title: 'erc20 payment challenge subplebbit',
+  prechallenges: [
+    {
+      path: path.join(__dirname, 'prechallenges', 'erc20-payment'),
+      options: {
+        chainTicker: 'eth',
+        contractAddress: '0x...',
+        recipientAddress: '0x...',
+        symbol: 'PLEB',
+        decimals: '18',
+        postPrice: '1000',
+        replyPrice: '100',
+        votePrice: '10'
+      },
+      // if failed, auto reject
+      required: true
+    },
+  ],
+  settings: {
+    challenges: []
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
@@ -189,7 +212,8 @@ const subplebbits = [
   // friendlySubKarmaOrAgeChallegeSubplebbit,
   // whitelistChallegeSubplebbit
   // blacklistChallegeSubplebbit
-  erc20BalanceChallegeSubplebbit
+  // erc20BalanceChallegeSubplebbit
+  erc20PaymentChallegeSubplebbit
 ]
 
 // define mock Author instances
