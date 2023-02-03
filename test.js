@@ -147,13 +147,28 @@ const whitelistChallegeSubplebbit = {
     ]
   }
 }
+const blacklistChallegeSubplebbit = {
+  title: 'blacklist challenge subplebbit',
+  settings: {
+    // challenges should never be triggered on prechallenge fails because both prechallenges are required
+    challenges: [
+      {
+        path: path.join(__dirname, 'challenges', 'blacklist'),
+        options: {
+          blacklist: 'high-karma.eth,some-author.eth',
+        }
+      },
+    ]
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
   // excludeHighKarmaChallegeSubplebbit, 
   // friendlySubKarmaAndAgeChallegeSubplebbit, 
   // friendlySubKarmaOrAgeChallegeSubplebbit,
-  whitelistChallegeSubplebbit
+  // whitelistChallegeSubplebbit
+  blacklistChallegeSubplebbit
 ]
 
 // define mock Author instances
@@ -244,7 +259,7 @@ const prechallengeAnswers = {
           const {getChallenge} = require(subplebbitChallenge.path)
 
           // call the getChallenge function using the options of subplebbit.challenges[i]
-          const challenge = await getChallenge(subplebbitChallenge.options)
+          const challenge = await getChallenge(subplebbitChallenge.options, publication)
           challenges.push(challenge)
           if (challenge.success === false) {
             challengeFailures.push(subplebbit.title + ': ' + challenge.error)
