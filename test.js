@@ -161,6 +161,26 @@ const blacklistChallegeSubplebbit = {
     ]
   }
 }
+const erc20BalanceChallegeSubplebbit = {
+  title: 'erc20 balance challenge subplebbit',
+  prechallenges: [
+    {
+      path: path.join(__dirname, 'prechallenges', 'erc20-balance'),
+      options: {
+        chainTicker: 'eth',
+        address: '0x...',
+        symbol: 'PLEB',
+        decimals: '18',
+        minBalance: '1000'
+      },
+      // if failed, auto reject
+      required: true
+    },
+  ],
+  settings: {
+    challenges: []
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
@@ -168,11 +188,15 @@ const subplebbits = [
   // friendlySubKarmaAndAgeChallegeSubplebbit, 
   // friendlySubKarmaOrAgeChallegeSubplebbit,
   // whitelistChallegeSubplebbit
-  blacklistChallegeSubplebbit
+  // blacklistChallegeSubplebbit
+  erc20BalanceChallegeSubplebbit
 ]
 
 // define mock Author instances
-const highKarmaAuthor = {address: 'high-karma.eth'}
+const highKarmaAuthor = {
+  address: 'high-karma.eth',
+  wallets: {eth: {address: '0x...'}}
+}
 const lowKarmaAuthor = {address: 'low-karma.eth'}
 const authors = [highKarmaAuthor, lowKarmaAuthor]
 
@@ -209,6 +233,7 @@ const prechallengeAnswers = {
 
     let failedRequiredPrechallenge = false
     for (const subplebbit of subplebbits) {
+      let success = true
       const challenges = []
       const challengeSuccesses = []
       const challengeFailures = []
@@ -233,6 +258,7 @@ const prechallengeAnswers = {
           // if a required challenge has failed, no need to continue
           if (subplebbitPrechallenge.required) {
             failedRequiredPrechallenge = true
+            success = false
             break
           }
         }
@@ -263,6 +289,7 @@ const prechallengeAnswers = {
           challenges.push(challenge)
           if (challenge.success === false) {
             challengeFailures.push(subplebbit.title + ': ' + challenge.error)
+            success = false
           }
           else if (challenge.success === true) {
             challengeSuccesses.push(subplebbit.title)
@@ -281,7 +308,7 @@ const prechallengeAnswers = {
       if (prechallengeFailures.length) {
         console.log('prechallengeFailures:', prechallengeFailures)
       }
-      console.log('')
+      // console.log('')
       if (challenges.length) {
         console.log('challenges:', challenges)
       }
@@ -291,6 +318,7 @@ const prechallengeAnswers = {
       if (challengeFailures.length) {
         console.log('challengeFailures:', challengeFailures)
       }
+      console.log('success:', success)
       console.log('')
     }
   }

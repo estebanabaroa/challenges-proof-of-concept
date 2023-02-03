@@ -1,8 +1,4 @@
 
-const getChallenge = async () => {
-  throw Error('friendly sub karma does not issue custom challenges')
-}
-
 const getComment = async (cid) => {
   return {
     subplebbitAddress: 'friendly-sub.eth',
@@ -105,4 +101,4 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
   }
 }
 
-module.exports = {getChallenge, getChallengeVerification}
+module.exports = {getChallengeVerification}
