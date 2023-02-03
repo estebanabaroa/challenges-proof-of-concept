@@ -120,7 +120,7 @@ const getChallengeVerification = async ({
 
   // NOTE: the credits will be deducted even if the publication fails a subsequent challenge
   // make sure to use payment challenge as last or to exlude subsequent challenges 
-  await incrementSpentAuthorCredits(authorAddress, authorCredits - publicationPrice)
+  await incrementSpentAuthorCredits(authorAddress, publicationPrice)
 
   return {
     success: true
