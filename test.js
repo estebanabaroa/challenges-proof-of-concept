@@ -195,7 +195,7 @@ const subplebbits = [
 // define mock Author instances
 const highKarmaAuthor = {
   address: 'high-karma.eth',
-  wallets: {eth: {address: '0x...'}}
+  wallets: {eth: {address: '0x...', signature: '0x...'}}
 }
 const lowKarmaAuthor = {address: 'low-karma.eth'}
 const authors = [highKarmaAuthor, lowKarmaAuthor]
