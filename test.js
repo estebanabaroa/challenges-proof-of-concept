@@ -54,7 +54,7 @@ const friendlySubKarmaAndAgeChallegeSubplebbit = {
   title: 'friendly sub karma AND age challenge subplebbit',
   prechallenges: [
     {
-      path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
+      path: path.join(__dirname, 'prechallenges', 'friendly-sub-karma'),
       options: {
         friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
         maxCidsToCheck: '3',
@@ -81,7 +81,7 @@ const friendlySubKarmaOrAgeChallegeSubplebbit = {
   title: 'friendly sub karma OR age challenge subplebbit',
   prechallenges: [
     {
-      path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
+      path: path.join(__dirname, 'prechallenges', 'friendly-sub-karma'),
       options: {
         friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
         maxCidsToCheck: '3',
@@ -89,7 +89,7 @@ const friendlySubKarmaOrAgeChallegeSubplebbit = {
       }
     },
     {
-      path: path.join(__dirname, 'challenges', 'friendly-sub-karma'),
+      path: path.join(__dirname, 'prechallenges', 'friendly-sub-karma'),
       options: {
         friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
         maxCidsToCheck: '3',
@@ -110,12 +110,50 @@ const friendlySubKarmaOrAgeChallegeSubplebbit = {
     ]
   }
 }
+const whitelistChallegeSubplebbit = {
+  title: 'whitelist challenge subplebbit',
+  prechallenges: [
+    {
+      path: path.join(__dirname, 'prechallenges', 'whitelist'),
+      options: {
+        whitelist: 'high-karma.eth,some-author.eth',
+      },
+      // if failed, auto reject
+      required: true
+    },
+    {
+      path: path.join(__dirname, 'prechallenges', 'friendly-sub-karma'),
+      options: {
+        friendlySubAddresses: 'friendly-sub.eth,friendly-sub2.eth',
+        maxCidsToCheck: '3',
+        postScore: '100',
+      },
+      // if failed AND not excluded, auto reject
+      required: true,
+      exclude: [{prechallenges: [0]}]
+    },
+  ],
+  settings: {
+    // challenges should never be triggered on prechallenge fails because both prechallenges are required
+    challenges: [
+      {
+        path: path.join(__dirname, 'challenges', 'auto-fail'),
+        // challenge should never be triggered on prechallenge success because both are excluded
+        exclude: [
+          {prechallenges: [0]},
+          {prechallenges: [1]}
+        ]
+      }
+    ]
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
   // excludeHighKarmaChallegeSubplebbit, 
   // friendlySubKarmaAndAgeChallegeSubplebbit, 
-  friendlySubKarmaOrAgeChallegeSubplebbit
+  // friendlySubKarmaOrAgeChallegeSubplebbit,
+  whitelistChallegeSubplebbit
 ]
 
 // define mock Author instances
@@ -147,6 +185,14 @@ const prechallengeAnswers = {
     console.log('--', 'author ' + author.address + ':')
     console.log('')
 
+    // define mock publication
+    const publication = {
+      content: 'some content',
+      timestamp: Date.now(),
+      author
+    }
+
+    let failedRequiredPrechallenge = false
     for (const subplebbit of subplebbits) {
       const challenges = []
       const challengeSuccesses = []
@@ -157,41 +203,55 @@ const prechallengeAnswers = {
 
       // prechallenges
       for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
+        // prechallenges can exclude based on the success of previous prechallenges
+        if (shouldExcludePrechallengeSuccess(subplebbitPrechallenge, prechallenges)) {
+          continue
+        }
+
         const challengeAnswer = prechallengeAnswers[author.address]?.[subplebbit.title]
         const {getChallengeVerification} = require(subplebbitPrechallenge.path)
-        const challengeVerification = await getChallengeVerification(subplebbitPrechallenge.options, challengeAnswer)
+        const challengeVerification = await getChallengeVerification(subplebbitPrechallenge.options, challengeAnswer, publication)
         prechallenges.push(challengeVerification)
         if (challengeVerification.success === false) {
           prechallengeFailures.push(subplebbit.title + ': ' + challengeVerification.error)
+
+          // if a required challenge has failed, no need to continue
+          if (subplebbitPrechallenge.required) {
+            failedRequiredPrechallenge = true
+            break
+          }
         }
         else if (challengeVerification.success === true) {
           prechallengeSuccesses.push(subplebbit.title)
         }
       }
 
-      // interate over all challenges of the subplebbit, can be more than 1
-      for (const subplebbitChallenge of subplebbit.settings.challenges) {
+      // if a required challenge has failed, no need to continue
+      if (!failedRequiredPrechallenge) {
+        // interate over all challenges of the subplebbit, can be more than 1
+        for (const subplebbitChallenge of subplebbit.settings.challenges) {
 
-        // exclude author from challenge based on the subplebbit minimum karma settings
-        const subplebbitAuthor = subplebbitAuthors[author.address]?.[subplebbit.title]
-        if (shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor)) {
-          continue
-        }
-        if (shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges)) {
-          continue
-        }
+          // exclude author from challenge based on the subplebbit minimum karma settings
+          const subplebbitAuthor = subplebbitAuthors[author.address]?.[subplebbit.title]
+          if (shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor)) {
+            continue
+          }
+          if (shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges)) {
+            continue
+          }
 
-        // get the getChallenge function
-        const {getChallenge} = require(subplebbitChallenge.path)
+          // get the getChallenge function
+          const {getChallenge} = require(subplebbitChallenge.path)
 
-        // call the getChallenge function using the options of subplebbit.challenges[i]
-        const challenge = await getChallenge(subplebbitChallenge.options)
-        challenges.push(challenge)
-        if (challenge.success === false) {
-          challengeFailures.push(subplebbit.title + ': ' + challenge.error)
-        }
-        else if (challenge.success === true) {
-          challengeSuccesses.push(subplebbit.title)
+          // call the getChallenge function using the options of subplebbit.challenges[i]
+          const challenge = await getChallenge(subplebbitChallenge.options)
+          challenges.push(challenge)
+          if (challenge.success === false) {
+            challengeFailures.push(subplebbit.title + ': ' + challenge.error)
+          }
+          else if (challenge.success === true) {
+            challengeSuccesses.push(subplebbit.title)
+          }
         }
       }
 
@@ -241,7 +301,6 @@ function shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor) {
 }
 
 function shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges) {
-  console.log({subplebbitChallenge, prechallenges})
   if (!prechallenges || !subplebbitChallenge.exclude) {
     return false
   }

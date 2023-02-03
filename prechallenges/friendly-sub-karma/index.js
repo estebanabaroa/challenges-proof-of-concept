@@ -1,5 +1,4 @@
 
-
 const getChallenge = async () => {
   throw Error('friendly sub karma does not issue custom challenges')
 }
