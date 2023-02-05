@@ -52,4 +52,14 @@ const getChallenge = async ({difficulty} = {}) => {
   return {challenge, answer, type: 'text'}
 }
 
-module.exports = {getChallenge}
+const options = [
+  {
+    propertyName: 'difficulty',
+    label: 'Difficulty',
+    default: '1',
+    description: 'The math difficulty of the challenge between 1-3.',
+    placeholder: '1'
+  }
+]
+
+module.exports = {getChallenge, options}
