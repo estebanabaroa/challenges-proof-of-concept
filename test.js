@@ -181,20 +181,18 @@ const erc20BalanceChallegeSubplebbit = {
     challenges: []
   }
 }
-const erc20PaymentChallegeSubplebbit = {
-  title: 'erc20 payment challenge subplebbit',
+const evmContractCallChallegeSubplebbit = {
+  title: 'evm contract call challenge subplebbit',
   prechallenges: [
     {
-      path: path.join(__dirname, 'prechallenges', 'erc20-payment'),
+      path: path.join(__dirname, 'prechallenges', 'evm-contract-call'),
       options: {
         chainTicker: 'eth',
-        contractAddress: '0x...',
-        recipientAddress: '0x...',
-        symbol: 'PLEB',
-        decimals: '18',
-        postPrice: '1000',
-        replyPrice: '100',
-        votePrice: '10'
+        // contract address
+        address: '0x...',
+        // abi of the contract method
+        abi: '{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}',
+        condition: '>1000'
       },
       // if failed, auto reject
       required: true
@@ -213,7 +211,8 @@ const subplebbits = [
   // whitelistChallegeSubplebbit
   // blacklistChallegeSubplebbit
   // erc20BalanceChallegeSubplebbit
-  erc20PaymentChallegeSubplebbit
+  // erc20PaymentChallegeSubplebbit
+  evmContractCallChallegeSubplebbit
 ]
 
 // define mock Author instances
