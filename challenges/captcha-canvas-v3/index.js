@@ -27,4 +27,6 @@ const getChallenge = async ({width, height, ...setCaptchaOptions} = {}) => {
   return {challenge, answer, type: 'image'}
 }
 
-module.exports = {getChallenge}
+const type = 'image'
+
+module.exports = {getChallenge, type}

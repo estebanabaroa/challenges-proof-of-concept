@@ -62,4 +62,6 @@ const options = [
   }
 ]
 
-module.exports = {getChallenge, options}
+const type = 'text'
+
+module.exports = {getChallenge, options, type}

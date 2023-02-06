@@ -15,4 +15,4 @@ const getChallenge = async ({blacklist = ''} = {}, publication) => {
   }
 }
 
-module.exports = {getChallenge}
+module.exports = {getChallenge, type: 'text'}

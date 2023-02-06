@@ -7,4 +7,4 @@ const getChallenge = async () => {
   }
 }
 
-module.exports = {getChallenge}
+module.exports = {getChallenge, type: 'text'}

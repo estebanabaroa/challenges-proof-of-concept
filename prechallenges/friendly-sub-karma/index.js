@@ -101,4 +101,7 @@ const getChallengeVerification = async ({friendlySubAddresses = '', maxCidsToChe
   }
 }
 
-module.exports = {getChallengeVerification}
+const challengeAnswer = 'comments-in-subplebbits'
+const challengeAnswerPropName = 'friendlySubAddresses'
+
+module.exports = {getChallengeVerification, challengeAnswer, challengeAnswerPropName}

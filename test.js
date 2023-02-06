@@ -181,6 +181,29 @@ const erc20BalanceChallegeSubplebbit = {
     challenges: []
   }
 }
+const erc20PaymentChallegeSubplebbit = {
+  title: 'erc20 payment challenge subplebbit',
+  prechallenges: [
+    {
+      path: path.join(__dirname, 'prechallenges', 'erc20-payment'),
+      options: {
+        chainTicker: 'eth',
+        contractAddress: '0x...',
+        recipientAddress: '0x...',
+        symbol: 'PLEB',
+        decimals: '18',
+        postPrice: '1000',
+        replyPrice: '100',
+        votePrice: '10'
+      },
+      // if failed, auto reject
+      required: true
+    },
+  ],
+  settings: {
+    challenges: []
+  }
+}
 const evmContractCallChallegeSubplebbit = {
   title: 'evm contract call challenge subplebbit',
   prechallenges: [
@@ -239,6 +262,25 @@ const prechallengeAnswers = {
   }
 }
 
+// display mock requirements
+if (process.argv[2] === 'req') {
+  for (const subplebbit of subplebbits) {
+    console.log('--', subplebbit.title)
+    // mock displaying the prechallenges requirements in the interface
+    for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
+      console.log(subplebbitPrechallenge)
+      console.log(getChallengeRequirements(subplebbitPrechallenge))
+    }
+
+    // mock displaying the challenges requirements in the interface
+    for (const subplebbitChallenge of subplebbit.settings.challenges) {
+      console.log(subplebbitChallenge)
+      console.log(getChallengeRequirements(subplebbitChallenge))
+    }
+  }
+  process.exit()
+}
+
 ;(async () => {
   // interate over all authors to get a challenge for it
   for (const author of authors) {
@@ -264,6 +306,12 @@ const prechallengeAnswers = {
       const prechallengeSuccesses = []
       const prechallengeFailures = []
 
+      // mock displaying the prechallenges requirements in the interface
+      for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
+        console.log(subplebbitPrechallenge)
+        console.log(getChallengeRequirements(subplebbitPrechallenge))
+      }
+
       // prechallenges
       for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
         // prechallenges can exclude based on the success of previous prechallenges
@@ -288,6 +336,12 @@ const prechallengeAnswers = {
         else if (challengeVerification.success === true) {
           prechallengeSuccesses.push(subplebbit.title)
         }
+      }
+
+      // mock displaying the prechallenges requirements in the interface
+      for (const subplebbitChallenge of subplebbit.settings.challenges) {
+        console.log(subplebbitChallenge)
+        console.log(getChallengeRequirements(subplebbitChallenge))
       }
 
       // if a required challenge has failed, no need to continue
@@ -331,7 +385,6 @@ const prechallengeAnswers = {
       if (prechallengeFailures.length) {
         console.log('prechallengeFailures:', prechallengeFailures)
       }
-      // console.log('')
       if (challenges.length) {
         console.log('challenges:', challenges)
       }
@@ -346,6 +399,34 @@ const prechallengeAnswers = {
     }
   }
 })()
+
+function getChallengeRequirements(subplebbitChallenge) {
+  if (subplebbitChallenge.path) {
+    const challenge = require(subplebbitChallenge.path)
+    subplebbitChallenge = {...subplebbitChallenge, challenge}
+  }
+
+  const requirements = []
+  if (subplebbitChallenge.options?.chainTicker) {
+    requirements.push('need autor wallet for chain ticker: ' + subplebbitChallenge.options?.chainTicker)
+  }
+  if (subplebbitChallenge.exclude) {
+    for (const exclude of subplebbitChallenge.exclude) {
+      if (exclude.postScore || exclude.replyScore || exclude.firstCommentTimestamp) {
+        requirements.push('karma history could bypass some challenges')
+        break
+      }
+    }
+  }
+  if (subplebbitChallenge.challenge?.type) {
+    requirements.push('need an interface that supports type: ' + subplebbitChallenge.challenge?.type)
+  }
+  if (subplebbitChallenge.challenge?.challengeAnswer) {
+    const challengeAnswerQuery = subplebbitChallenge.options[subplebbitChallenge.challenge.challengeAnswerPropName]
+    requirements.push('publishing will automatically include prechallenge answer: ' + subplebbitChallenge.challenge?.challengeAnswer + ' with ' + challengeAnswerQuery)
+  }
+  return requirements
+}
 
 function shouldExcludeAuthor(subplebbitChallenge, subplebbitAuthor) {
   if (!subplebbitAuthor || !subplebbitChallenge.exclude) {
