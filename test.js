@@ -225,6 +225,26 @@ const evmContractCallChallegeSubplebbit = {
     challenges: []
   }
 }
+const passwordChallegeSubplebbit = {
+  title: 'password challenge subplebbit',
+  prechallenges: [
+    {
+      path: path.join(__dirname, 'prechallenges', 'question'),
+      options: {
+        answer: 'password',
+      },
+      challenge: {
+        challenge: 'What is the password?',
+        type: 'text'
+      },
+      // if failed, auto reject
+      required: true
+    },
+  ],
+  settings: {
+    challenges: []
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
@@ -235,7 +255,8 @@ const subplebbits = [
   // blacklistChallegeSubplebbit
   // erc20BalanceChallegeSubplebbit
   // erc20PaymentChallegeSubplebbit
-  evmContractCallChallegeSubplebbit
+  // evmContractCallChallegeSubplebbit
+  passwordChallegeSubplebbit
 ]
 
 // define mock Author instances
@@ -258,7 +279,8 @@ const prechallengeAnswers = {
   [highKarmaAuthor.address]: {
     // list of comment cids to use as karma minimum post score
     [friendlySubKarmaAndAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...']),
-    [friendlySubKarmaOrAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...'])
+    [friendlySubKarmaOrAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...']),
+    [passwordChallegeSubplebbit.title]: 'password'
   }
 }
 
@@ -402,8 +424,8 @@ if (process.argv[2] === 'req') {
 
 function getChallengeRequirements(subplebbitChallenge) {
   if (subplebbitChallenge.path) {
-    const challenge = require(subplebbitChallenge.path)
-    subplebbitChallenge = {...subplebbitChallenge, challenge}
+    const challengeFile = require(subplebbitChallenge.path)
+    subplebbitChallenge = {...subplebbitChallenge, challengeFile}
   }
 
   const requirements = []
@@ -418,12 +440,22 @@ function getChallengeRequirements(subplebbitChallenge) {
       }
     }
   }
-  if (subplebbitChallenge.challenge?.type) {
-    requirements.push('need an interface that supports type: ' + subplebbitChallenge.challenge?.type)
+  if (subplebbitChallenge.challengeFile?.type) {
+    requirements.push('need an interface that supports type: ' + subplebbitChallenge.challengeFile?.type)
   }
-  if (subplebbitChallenge.challenge?.challengeAnswer) {
-    const challengeAnswerQuery = subplebbitChallenge.options[subplebbitChallenge.challenge.challengeAnswerPropName]
-    requirements.push('publishing will automatically include prechallenge answer: ' + subplebbitChallenge.challenge?.challengeAnswer + ' with ' + challengeAnswerQuery)
+  if (subplebbitChallenge.challengeFile?.challengeAnswer) {
+    const challengeAnswerQuery = subplebbitChallenge.options[subplebbitChallenge.challengeFile.challengeAnswerPropName]
+    requirements.push('publishing will automatically include prechallenge answer: ' + subplebbitChallenge.challengeFile?.challengeAnswer + ' with ' + challengeAnswerQuery)
+  }
+  if (subplebbitChallenge.challenge?.type) {
+    let text = 'need an interface that supports type: ' + subplebbitChallenge.challenge?.type
+    if (subplebbitChallenge.challenge.type === 'text' && subplebbitChallenge.challenge.challenge) {
+      text += ', the text challenge is: ' + subplebbitChallenge.challenge.challenge 
+    }
+    else if (subplebbitChallenge.challenge.challenge) {
+      text += ', the challenge is included in the subplebbit'
+    }
+    requirements.push(text)
   }
   return requirements
 }
