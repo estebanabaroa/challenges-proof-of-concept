@@ -1,6 +1,7 @@
 // require('util').inspect.defaultOptions.maxStringLength = 50
 require('util').inspect.defaultOptions.depth = null
 const path = require('path')
+const {shouldExcludeFriendlySub} = require('./utils')
 
 // define mock Subplebbit instances
 const textMathChallegeSubplebbit = {
@@ -245,6 +246,25 @@ const passwordChallegeSubplebbit = {
     challenges: []
   }
 }
+const excludeFriendlySubKarmaChallegeSubplebbit = {
+  title: 'exclude friendly sub karma challenge subplebbit',
+  settings: {
+    challenges: [
+      {
+        path: path.join(__dirname, 'challenges', 'auto-fail'),
+        exclude: [
+          // exclude author with karma in those friendly subs
+          {friendlySub: {
+            addresses: ['friendly-sub.eth', 'friendly-sub2.eth'],
+            postScore: 100,
+            postReply: 100,
+            maxCommentCids: 3
+          }}
+        ]
+      }
+    ]
+  }
+}
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
@@ -256,7 +276,8 @@ const subplebbits = [
   // erc20BalanceChallegeSubplebbit
   // erc20PaymentChallegeSubplebbit
   // evmContractCallChallegeSubplebbit
-  passwordChallegeSubplebbit
+  // passwordChallegeSubplebbit
+  excludeFriendlySubKarmaChallegeSubplebbit
 ]
 
 // define mock Author instances
@@ -265,7 +286,10 @@ const highKarmaAuthor = {
   wallets: {eth: {address: '0x...', signature: '0x...'}}
 }
 const lowKarmaAuthor = {address: 'low-karma.eth'}
-const authors = [highKarmaAuthor, lowKarmaAuthor]
+const authors = [
+  highKarmaAuthor, 
+  lowKarmaAuthor
+]
 
 // define mock author karma scores and account age
 const subplebbitAuthors = {
@@ -282,6 +306,11 @@ const prechallengeAnswers = {
     [friendlySubKarmaOrAgeChallegeSubplebbit.title]: JSON.stringify(['Qm...', 'Qm...']),
     [passwordChallegeSubplebbit.title]: 'password'
   }
+}
+
+// define mock friendly sub comment cids
+const friendlySubCommentCids = {
+  [highKarmaAuthor.address]: ['Qm...', 'Qm...']
 }
 
 // display mock requirements
@@ -340,6 +369,9 @@ if (process.argv[2] === 'req') {
         if (shouldExcludePrechallengeSuccess(subplebbitPrechallenge, prechallenges)) {
           continue
         }
+        if (shouldExcludeFriendlySub(subplebbitPrechallenge, friendlySubCommentCids[author.address])) {
+          continue
+        }
 
         const challengeAnswer = prechallengeAnswers[author.address]?.[subplebbit.title]
         const {getChallengeVerification} = require(subplebbitPrechallenge.path)
@@ -377,6 +409,9 @@ if (process.argv[2] === 'req') {
             continue
           }
           if (shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges)) {
+            continue
+          }
+          if (shouldExcludeFriendlySub(subplebbitChallenge, friendlySubCommentCids[author.address])) {
             continue
           }
 
