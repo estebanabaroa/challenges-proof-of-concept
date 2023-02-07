@@ -346,6 +346,10 @@ if (process.argv[2] === 'req') {
       timestamp: Date.now(),
       author
     }
+    const challengeRequestMessage = {
+      publication,
+      friendlySubCommentCids: friendlySubCommentCids[author.address]
+    }
 
     let failedRequiredPrechallenge = false
     for (const subplebbit of subplebbits) {
@@ -369,7 +373,7 @@ if (process.argv[2] === 'req') {
         if (shouldExcludePrechallengeSuccess(subplebbitPrechallenge, prechallenges)) {
           continue
         }
-        if (shouldExcludeFriendlySub(subplebbitPrechallenge, friendlySubCommentCids[author.address])) {
+        if (shouldExcludeFriendlySub(subplebbitPrechallenge, challengeRequestMessage.friendlySubCommentCids)) {
           continue
         }
 
