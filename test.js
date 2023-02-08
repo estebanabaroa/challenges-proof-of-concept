@@ -253,8 +253,8 @@ const excludeFriendlySubKarmaChallegeSubplebbit = {
       {
         path: path.join(__dirname, 'challenges', 'auto-fail'),
         exclude: [
-          // exclude author with karma in those friendly subs
-          {friendlySub: {
+          // exclude author with karma in those subs using publication.challengeCommentCids
+          {subplebbit: {
             addresses: ['friendly-sub.eth', 'friendly-sub2.eth'],
             postScore: 100,
             postReply: 100,

@@ -21,7 +21,7 @@ const getCommentUpdate = async (ipnsName) => {
 const shouldExcludeFriendlySub = async (challenge, commentCids) => {
   // console.log({challenge, commentCids})
   for (const exclude of challenge.exclude || []) {
-    const {addresses, maxCommentCids, postScore, replyScore, firstCommentTimestamp} = exclude?.friendlySub || {}
+    const {addresses, maxCommentCids, postScore, replyScore, firstCommentTimestamp} = exclude?.subplebbit || {}
 
     console.log({maxCommentCids, addresses, firstCommentTimestamp, postScore, replyScore, commentCids})
 
