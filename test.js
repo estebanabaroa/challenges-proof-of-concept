@@ -348,7 +348,8 @@ if (process.argv[2] === 'req') {
     }
     const challengeRequestMessage = {
       publication,
-      friendlySubCommentCids: friendlySubCommentCids[author.address]
+      // some challenges could require including comment cids in other subs, like friendly subplebbit karma challenges
+      challengeCommentCids: friendlySubCommentCids[author.address]
     }
 
     let failedRequiredPrechallenge = false
@@ -373,7 +374,7 @@ if (process.argv[2] === 'req') {
         if (shouldExcludePrechallengeSuccess(subplebbitPrechallenge, prechallenges)) {
           continue
         }
-        if (shouldExcludeFriendlySub(subplebbitPrechallenge, challengeRequestMessage.friendlySubCommentCids)) {
+        if (await shouldExcludeFriendlySub(subplebbitPrechallenge, challengeRequestMessage.challengeCommentCids)) {
           continue
         }
 
@@ -415,7 +416,7 @@ if (process.argv[2] === 'req') {
           if (shouldExcludePrechallengeSuccess(subplebbitChallenge, prechallenges)) {
             continue
           }
-          if (shouldExcludeFriendlySub(subplebbitChallenge, friendlySubCommentCids[author.address])) {
+          if (await shouldExcludeFriendlySub(subplebbitChallenge, friendlySubCommentCids[author.address])) {
             continue
           }
 
@@ -454,6 +455,9 @@ if (process.argv[2] === 'req') {
       }
       if (challengeFailures.length) {
         console.log('challengeFailures:', challengeFailures)
+      }
+      if (!prechallenges.length && !challengeFailures.length) {
+        console.log('all challenges excluded')
       }
       console.log('success:', success)
       console.log('')
