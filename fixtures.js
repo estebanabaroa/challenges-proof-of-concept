@@ -126,14 +126,9 @@ const passwordChallegeSubplebbit = {
       {
         path: path.join(__dirname, 'challenges', 'question'),
         options: {
+          question: 'What is the password?',
           answer: 'password',
         },
-        challenge: {
-          challenge: 'What is the password?',
-          type: 'text'
-        },
-        // if failed, auto reject
-        required: true
       },
     ],
   }
@@ -242,10 +237,10 @@ const subplebbits = [
   // blacklistChallegeSubplebbit,
   // erc20PaymentChallegeSubplebbit,
   // evmContractCallChallegeSubplebbit,
-  // passwordChallegeSubplebbit,
+  passwordChallegeSubplebbit,
   // excludeFriendlySubKarmaChallegeSubplebbit,
-  twoOutOf4SuccessChallegeSubplebbit,
-  twoOutOf4SuccessInverseChallegeSubplebbit
+  // twoOutOf4SuccessChallegeSubplebbit,
+  // twoOutOf4SuccessInverseChallegeSubplebbit
 ]
 
 module.exports = {subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers}

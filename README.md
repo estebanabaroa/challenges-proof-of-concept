@@ -27,6 +27,7 @@ SubplebbitChallengeSettings extends SubplebbitChallenge { // the private setting
 SubplebbitChallengeFile { // the result of the function exported by the challenge file
   optionInputs?: SubplebbitChallengeSettings.getChallenge.optionInputs
   type: SubplebbitChallenge.type
+  challenge?: string // some challenges can be asked before the user publishes, like a password for example
   getChallenge: SubplebbitChallengeSettings.getChallenge
 }
 GetChallengeOptions {

@@ -76,7 +76,8 @@ const {subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeComme
       const challengeFailures = []
       const challengesPending = []
       for (const [challengeIndex, challengeResult] of challengeResults.entries()) {
-        const subplebbitChallenge = subplebbit.settings.challenges[challengeIndex]
+        const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
+        const subplebbitChallenge = getChallengeFromChallengeSettings(subplebbitChallengeSettings)
 
         // exclude author from challenge based on the subplebbit minimum karma settings
         if (shouldExcludeAuthor(subplebbitChallenge, challengeRequestMessage.publication.author)) {
@@ -144,6 +145,7 @@ function getChallengeFromChallengeSettings(subplebbitChallengeSettings) {
     const SubplebbitChallengeFile = require(subplebbitChallengeSettings.path)
     const subplebbitChallengeFile = SubplebbitChallengeFile(subplebbitChallengeSettings)
     type = subplebbitChallengeFile.type
+    challenge = subplebbitChallengeFile.challenge
   }
   return {exclude, description, challenge, type}
 }
