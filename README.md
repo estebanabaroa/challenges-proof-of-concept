@@ -46,7 +46,7 @@ Exclude { // all conditions in Exclude are AND, for OR, use another Exclude item
   subplebbit?: ExcludeSubplebbit // exclude if author karma (from challengeRequestMessage.challengeCommentCids) in another subplebbit is greater or equal
   postScore?: number // exclude if author post score is greater or equal
   postReply?: number // exclude if author reply score is greater or equal
-  firstCommentTimestamp?: number // exclude if author account age is greater or equal
+  firstCommentTimestamp?: number // exclude if author account age is greater or equal than now - firstCommentTimestamp
   challenges?: number[] // exclude if all challenges with indexes passed, e.g. challenges: [0, 1] excludes if challenges at index 0 AND 1 passed, plural because has to match all
   post?: boolean // exclude challenge if publication is a post
   reply?: boolean // exclude challenge if publication is a reply
@@ -59,7 +59,7 @@ ExcludeSubplebbit { // singular because it only has to match 1 subplebbit
   maxCommentCids: number // maximum amount of comment cids that will be fetched to check
   postScore?: number
   postReply?: number
-  firstCommentTimestamp?: number
+  firstCommentTimestamp?: number // exclude if author account age is greater or equal than now - firstCommentTimestamp
   role?: string[] // exclude challenge if author.role.role = one of the string, singular because it only has to match 1 role
 }
 OptionInput {

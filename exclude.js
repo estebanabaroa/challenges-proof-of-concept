@@ -18,6 +18,9 @@ const getCommentUpdate = async (ipnsName) => {
   }
 }
 
+// e.g. secondsToGoBack = 60 would return the timestamp 1 minute ago
+const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
+
 const shouldExcludeAuthorCommentCids = async (challenge, commentCids) => {
   // console.log({challenge, commentCids})
   for (const exclude of challenge.exclude || []) {
@@ -69,7 +72,8 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids) => {
       if (
         (postScore === undefined || (comment.update.author.subplebbit.postScore || 0) >= postScore) &&
         (replyScore === undefined || (comment.update.author.subplebbit.replyScore || 0) >= replyScore) &&
-        (firstCommentTimestamp === undefined || (comment.update.author.subplebbit.firstCommentTimestamp || 0) <= firstCommentTimestamp)
+        // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
+        (firstCommentTimestamp === undefined || (comment.update.author.subplebbit.firstCommentTimestamp || Infinity) <= getTimestampSecondsAgo(firstCommentTimestamp))
       ) {
         commentsWithMinimumKarmaAndAge.push(comment)
       }
@@ -105,13 +109,14 @@ function shouldExcludeAuthor(subplebbitChallenge, author) {
 
     // if match all of the exclude item properties, should exclude
     let shouldExclude = true
-    if (exclude.postScore && exclude.postScore > (author.subplebbitAuthor?.postScore || 0)) {
+    if (exclude.postScore && exclude.postScore > (author.subplebbit?.postScore || 0)) {
       shouldExclude = false
     }
-    if (exclude.replyScore && exclude.replyScore > (author.subplebbitAuthor?.replyScore || 0)) {
+    if (exclude.replyScore && exclude.replyScore > (author.subplebbit?.replyScore || 0)) {
       shouldExclude = false
     }
-    if (exclude.firstCommentTimestamp && exclude.firstCommentTimestamp < (author.subplebbitAuthor?.firstCommentTimestamp || 0)) {
+    // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
+    if (exclude.firstCommentTimestamp && getTimestampSecondsAgo(exclude.firstCommentTimestamp) < (author.subplebbit?.firstCommentTimestamp || Infinity)) {
       shouldExclude = false
     }
     if (exclude.address && !exclude.address.includes(author.address)) {

@@ -42,7 +42,23 @@ const excludeHighKarmaChallegeSubplebbit = {
         // exclude if the author match any one item in the array
         exclude: [
           {postScore: 100, replyScore: 100}, // exclude author that has more than 100 post score AND 100 reply score
-          {firstCommentTimestamp: Date.now() - 1000*60*60*24*100} // exclude author with account age older than 100 days
+          // exclude author with account age older than 100 days (Math.round(Date.now() / 1000)- 60*60*24*100)
+          {firstCommentTimestamp: 60*60*24*100}
+        ]
+      }
+    ]
+  }
+}
+const excludeAccountAgeChallegeSubplebbit = {
+  title: 'exclude account age challenge subplebbit',
+  settings: {
+    challenges: [
+      {
+        path: path.join(__dirname, 'challenges', 'fail'),
+        // exclude if the author match any one item in the array
+        exclude: [
+          // exclude author with account age older than 100 days (Math.round(Date.now() / 1000)- 60*60*24*100)
+          {firstCommentTimestamp: 60*60*24*100}
         ]
       }
     ]
@@ -214,7 +230,12 @@ const authors = [
 // define mock author karma scores and account age
 const subplebbitAuthors = {
   [highKarmaAuthor.address]: {
-    [excludeHighKarmaChallegeSubplebbit.title]: {postScore: 1000, replyScore: 1000, firstCommentTimestamp: 1}
+    [excludeHighKarmaChallegeSubplebbit.title]: {postScore: 1000, replyScore: 1000, firstCommentTimestamp: 1},
+    [excludeAccountAgeChallegeSubplebbit.title]: {postScore: 1, replyScore: 1, firstCommentTimestamp: 1}
+  },
+  [lowKarmaAuthor.address]: {
+    [excludeHighKarmaChallegeSubplebbit.title]: {postScore: 1, replyScore: 1000},
+    [excludeAccountAgeChallegeSubplebbit.title]: {postScore: 1000, replyScore: 1000}
   }
 }
 
@@ -232,12 +253,13 @@ const challengeAnswers = {
 const subplebbits = [
   // textMathChallegeSubplebbit, 
   // captchaAndMathChallegeSubplebbit, 
-  // excludeHighKarmaChallegeSubplebbit, 
+  excludeHighKarmaChallegeSubplebbit,
+  excludeAccountAgeChallegeSubplebbit,
   // whitelistChallegeSubplebbit,
   // blacklistChallegeSubplebbit,
   // erc20PaymentChallegeSubplebbit,
   // evmContractCallChallegeSubplebbit,
-  passwordChallegeSubplebbit,
+  // passwordChallegeSubplebbit,
   // excludeFriendlySubKarmaChallegeSubplebbit,
   // twoOutOf4SuccessChallegeSubplebbit,
   // twoOutOf4SuccessInverseChallegeSubplebbit
