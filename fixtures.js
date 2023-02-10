@@ -7,7 +7,8 @@ const textMathChallegeSubplebbit = {
     challenges: [
       {
         path: path.join(__dirname, 'challenges', 'text-math'),
-        options: {difficulty: '3'}
+        options: {difficulty: '3'},
+        description: 'Complete a math challenge.'
       }
     ]
   }
@@ -23,11 +24,13 @@ const captchaAndMathChallegeSubplebbit = {
           height: '400',
           characters: '10',
           color: '#000000'
-        }
+        },
+        description: 'Complete a captcha challenge.'
       },
       {
         path: path.join(__dirname, 'challenges', 'text-math'),
-        options: {difficulty: '2'}
+        options: {difficulty: '2'},
+        description: 'Complete a math challenge.'
       }
     ]
   }
@@ -251,10 +254,10 @@ const challengeAnswers = {
 }
 
 const subplebbits = [
-  // textMathChallegeSubplebbit, 
-  // captchaAndMathChallegeSubplebbit, 
-  excludeHighKarmaChallegeSubplebbit,
-  excludeAccountAgeChallegeSubplebbit,
+  textMathChallegeSubplebbit, 
+  captchaAndMathChallegeSubplebbit, 
+  // excludeHighKarmaChallegeSubplebbit,
+  // excludeAccountAgeChallegeSubplebbit,
   // whitelistChallegeSubplebbit,
   // blacklistChallegeSubplebbit,
   // erc20PaymentChallegeSubplebbit,
