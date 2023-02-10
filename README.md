@@ -1,12 +1,8 @@
 #### Types:
 
 ```javascript
-// Preincluded challenges that the author can run himself before publishing:
-// - evm-contract-call
-// - fail
-
 // list of challenges included with plebbit-js
-Plebbit.challenges = SubplebbitChallengeFile[]
+Plebbit.challenges = {[challengeName: string]: SubplebbitChallengeFile}
 
 ChallengeRequestMessage { // new props 
   encryptedChallengeCommentCids?: Encrypted<string[]> // some challenges could require including comment cids in other subs, like friendly subplebbit karma challenges
@@ -19,7 +15,8 @@ SubplebbitChallenge { // the public information to display to the user about the
   type?: 'image' | 'text' | 'audio' | 'video' | 'html'
 }
 SubplebbitChallengeSettings extends SubplebbitChallenge { // the private settings of the challenge (subplebbit.settings.challenges)
-  path?: the path to the challenge js file, used to get the props SubplebbitChallengeFile {optionInputs, type, getChallenge} 
+  name?: string // if the challenge has no path, use the challengeName from Plebbit.challenges to identify it
+  path?: string // the path to the challenge js file, used to get the props SubplebbitChallengeFile {optionInputs, type, getChallenge} 
   options?: GetChallengeOptions // the options argument to be passed to the getChallenge function
   optionInputs?: OptionInput[] // the options inputs fields to display to the user
   getChallenge: (c?: SubplebbitChallengeSettings, r?: ChallengeRequestMessage, a?: ChallengeAnswerMessage): GetChallengeResult | ChallengeAndAnswer
@@ -70,3 +67,7 @@ OptionInput {
   placeholder?: string // the value to display if the input field is empty, e.g. 10
 }
 ```
+
+#### Ideas:
+- interface so that the sub owner can display on publication.author.subplebbit the amount paid by the user for payment challenges
+- "standard" challenges like "fail" and "evm-contract-call" so that the frontend could calculate the exclude and result of the challenge to see if the author passes it before even publishing
