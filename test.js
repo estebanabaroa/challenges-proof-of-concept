@@ -4,25 +4,6 @@ const path = require('path')
 const {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess} = require('./exclude')
 const {subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids} = require('./fixtures')
 
-// // display mock requirements
-// if (process.argv[2] === 'req') {
-//   for (const subplebbit of subplebbits) {
-//     console.log('--', subplebbit.title)
-//     // mock displaying the prechallenges requirements in the interface
-//     for (const subplebbitPrechallenge of subplebbit.prechallenges || []) {
-//       console.log(subplebbitPrechallenge)
-//       console.log(getChallengeRequirements(subplebbitPrechallenge))
-//     }
-
-//     // mock displaying the challenges requirements in the interface
-//     for (const subplebbitChallenge of subplebbit.settings.challenges) {
-//       console.log(subplebbitChallenge)
-//       console.log(getChallengeRequirements(subplebbitChallenge))
-//     }
-//   }
-//   process.exit()
-// }
-
 ;(async () => {
   // interate over all authors to get a challenge for it
   for (const author of authors) {
@@ -149,41 +130,3 @@ function getChallengeFromChallengeSettings(subplebbitChallengeSettings) {
   }
   return {exclude, description, challenge, type}
 }
-
-// function getChallengeRequirements(subplebbitChallenge) {
-//   if (subplebbitChallenge.path) {
-//     const challengeFile = require(subplebbitChallenge.path)
-//     subplebbitChallenge = {...subplebbitChallenge, challengeFile}
-//   }
-
-//   const requirements = []
-//   if (subplebbitChallenge.options?.chainTicker) {
-//     requirements.push('need autor wallet for chain ticker: ' + subplebbitChallenge.options?.chainTicker)
-//   }
-//   if (subplebbitChallenge.exclude) {
-//     for (const exclude of subplebbitChallenge.exclude) {
-//       if (exclude.postScore || exclude.replyScore || exclude.firstCommentTimestamp) {
-//         requirements.push('karma history could bypass some challenges')
-//         break
-//       }
-//     }
-//   }
-//   if (subplebbitChallenge.challengeFile?.type) {
-//     requirements.push('need an interface that supports type: ' + subplebbitChallenge.challengeFile?.type)
-//   }
-//   if (subplebbitChallenge.challengeFile?.challengeAnswer) {
-//     const challengeAnswerQuery = subplebbitChallenge.options[subplebbitChallenge.challengeFile.challengeAnswerPropName]
-//     requirements.push('publishing will automatically include prechallenge answer: ' + subplebbitChallenge.challengeFile?.challengeAnswer + ' with ' + challengeAnswerQuery)
-//   }
-//   if (subplebbitChallenge.challenge?.type) {
-//     let text = 'need an interface that supports type: ' + subplebbitChallenge.challenge?.type
-//     if (subplebbitChallenge.challenge.type === 'text' && subplebbitChallenge.challenge.challenge) {
-//       text += ', the text challenge is: ' + subplebbitChallenge.challenge.challenge 
-//     }
-//     else if (subplebbitChallenge.challenge.challenge) {
-//       text += ', the challenge is included in the subplebbit'
-//     }
-//     requirements.push(text)
-//   }
-//   return requirements
-// }

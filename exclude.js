@@ -67,9 +67,9 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids) => {
     for (const comment of commentsInFriendlySubs) {
       // an author must match ALL defined filters
       if (
-        (postScore === undefined || comment.update.author.subplebbit.postScore >= postScore) &&
-        (replyScore === undefined || comment.update.author.subplebbit.replyScore >= replyScore) &&
-        (firstCommentTimestamp === undefined || comment.update.author.subplebbit.firstCommentTimestamp <= firstCommentTimestamp)
+        (postScore === undefined || (comment.update.author.subplebbit.postScore || 0) >= postScore) &&
+        (replyScore === undefined || (comment.update.author.subplebbit.replyScore || 0) >= replyScore) &&
+        (firstCommentTimestamp === undefined || (comment.update.author.subplebbit.firstCommentTimestamp || 0) <= firstCommentTimestamp)
       ) {
         commentsWithMinimumKarmaAndAge.push(comment)
       }
