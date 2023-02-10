@@ -1,6 +1,6 @@
 #### Types:
 
-```
+```javascript
 ChallengeRequestMessage extends PubsubMessage {
   challengeRequestId: string // random string choosen by sender
   acceptedChallengeTypes: string[] // list of challenge types the client can do, for example cli clients or old clients won't do all types
