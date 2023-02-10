@@ -1,6 +1,58 @@
 // to pass this challenge, the author must send some ERC20 to the subplebbit owner
 // the subplebbit owner must monitor the total sent by each sender to his address
-// when an author publishes a post/reply/vote the subplebbit owner deducts from the total sent by the sender and allows the publication
+// when an author publishes a post/reply/vote the subplebbit owner deducts from the
+// total sent by the sender and allows the publication
+
+const optionInputs = [
+  {
+    option: 'chainTicker',
+    label: 'chainTicker',
+    default: '',
+    description: '',
+  },
+  {
+    option: 'contractAddress',
+    label: 'contractAddress',
+    default: '',
+    description: '',
+  },
+  {
+    option: 'recipientAddress',
+    label: 'recipientAddress',
+    default: '',
+    description: 'The address to send the payments to.',
+  },
+  {
+    option: 'symbol',
+    label: 'symbol',
+    default: '',
+    description: 'The ticker of the token.',
+  },
+  {
+    option: 'decimals',
+    label: 'decimals',
+    default: '18',
+    description: 'The amount of decimals of the token.',
+  },
+  {
+    option: 'postPrice',
+    label: 'postPrice',
+    default: '0',
+    description: 'The payment for 1 post.',
+  },
+  {
+    option: 'replyPrice',
+    label: 'replyPrice',
+    default: '0',
+    description: 'The payment for 1 reply.',
+  },
+  {
+    option: 'votePrice',
+    label: 'votePrice',
+    default: '0',
+    description: 'The payment for 1 vote.',
+  }
+]
 
 const getPublicationPrice = ({postPrice, replyPrice, votePrice}, publication) => {
   if (publication.vote !== undefined) {
@@ -32,7 +84,7 @@ const verifyAuthorAddress = async (publication, chainTicker) => {
   return false
 }
 
-const getAuthorCredits = async ({chainTicker, contractAddress, recipientAddress, decimals}, authorAddress) => {
+const getAuthorCredits = async ({chainTicker, contractAddress, recipientAddress, decimals, symbol}, authorAddress) => {
   // mock getting the author credits from the blockchain using transfer logs
   // mock deduct the author spent credits from some database (dont use the sub database, use some other file)
   return 10000
@@ -42,17 +94,8 @@ const incrementSpentAuthorCredits = async (authorAddress, amount) => {
   // mock incrementing the total spent credit by the author
 }
 
-const getChallengeVerification = async ({
-  chainTicker = '',
-  contractAddress = '',
-  recipientAddress = '',
-  symbol = '',
-  decimals = '',
-  postPrice = '',
-  replyPrice = '',
-  votePrice = ''
-} = {}, challengeAnswer, publication) => {
-
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+  let {chainTicker, contractAddress, recipientAddress, symbol, decimals, postPrice, replyPrice, votePrice} = subplebbitChallengeSettings?.options || {}
   if (!chainTicker) {
     throw Error('missing option chainTicker')
   }
@@ -82,11 +125,13 @@ const getChallengeVerification = async ({
   }
   votePrice = Number(votePrice)
 
+  const publication = challengeRequestMessage.publication
+
   const authorAddress = publication.author.wallets?.[chainTicker]?.address
   if (!authorAddress) {
     return {
       success: false,
-      error: `Author doesn't have a wallet set.`
+      error: `Author doesn't have wallet (${chainTicker}) set.`
     }
   }
 
@@ -94,7 +139,7 @@ const getChallengeVerification = async ({
   if (!verification) {
     return {
       success: false,
-      error: `Author doesn't signature proof of his wallet address.`
+      error: `Author doesn't signature proof of his wallet (${chainTicker}) address.`
     }
   }
 
@@ -105,7 +150,7 @@ const getChallengeVerification = async ({
   catch (e) {
     return {
       success: false,
-      error: `Failed getting author credits from blockchain.`
+      error: `Failed getting author credits from blockchain (${chainTicker} ${symbol} ${contractAddress}).`
     }
   }
 
@@ -114,7 +159,7 @@ const getChallengeVerification = async ({
   if (authorCredits < publicationPrice) {
     return {
       success: false,
-      error: `Author doesn't have enough credits.`
+      error: `Author doesn't have enough credits (${chainTicker} ${symbol} ${contractAddress}).`
     }
   }
 
@@ -127,4 +172,13 @@ const getChallengeVerification = async ({
   }
 }
 
-module.exports = {getChallengeVerification}
+function SubplebbitChallengeFile (subplebbitChallengeSettings) {
+  let {chainTicker} = subplebbitChallengeSettings?.options || {}
+  if (!chainTicker) {
+    throw Error('missing option chainTicker')
+  }
+  const type = 'chain/' + chainTicker
+  return {getChallenge, optionInputs, type}
+}
+
+module.exports = SubplebbitChallengeFile

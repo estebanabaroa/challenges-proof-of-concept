@@ -8,6 +8,18 @@
 
 */
 
+const optionInputs = [
+  {
+    option: 'difficulty',
+    label: 'Difficulty',
+    default: '1',
+    description: 'The math difficulty of the challenge between 1-3.',
+    placeholder: '1'
+  }
+]
+
+const type = 'text'
+
 const getRandomNumber = (minNumber, maxNumber) => Math.floor(Math.random() * (maxNumber - minNumber + 1) + minNumber)
 
 const getChallengeString = (minNumber, maxNumber, operators) => {
@@ -28,7 +40,8 @@ const getChallengeString = (minNumber, maxNumber, operators) => {
   return `${firstNumber} ${operator} ${secondNumber}`
 }
 
-const getChallenge = async ({difficulty} = {}) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+  let difficulty = subplebbitChallengeSettings?.options?.difficulty
   if (!difficulty) {
   	difficulty = '1'
   }
@@ -49,19 +62,11 @@ const getChallenge = async ({difficulty} = {}) => {
   }
 
   const answer = String(eval(challenge))
-  return {challenge, answer, type: 'text'}
+  return {challenge, answer, type}
 }
 
-const options = [
-  {
-    propertyName: 'difficulty',
-    label: 'Difficulty',
-    default: '1',
-    description: 'The math difficulty of the challenge between 1-3.',
-    placeholder: '1'
-  }
-]
+function SubplebbitChallengeFile (subplebbitChallengeSettings) {
+  return {getChallenge, optionInputs, type}
+}
 
-const type = 'text'
-
-module.exports = {getChallenge, options, type}
+module.exports = SubplebbitChallengeFile

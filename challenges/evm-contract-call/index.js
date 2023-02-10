@@ -1,4 +1,41 @@
 
+const optionInputs = [
+  {
+    option: 'chainTicker',
+    label: 'chainTicker',
+    default: 'eth',
+    description: 'The chain ticker',
+    placeholder: 'eth'
+  },
+  {
+    option: 'address',
+    label: 'Address',
+    default: '',
+    description: 'The contract address.',
+    placeholder: '0x...'
+  },
+  {
+    option: 'abi',
+    label: 'ABI',
+    default: '',
+    description: 'The ABI of the contract method.',
+    placeholder: '{"constant":true,"inputs":[{"internalType":"address","name":"account...'
+  },
+  {
+    option: 'condition',
+    label: 'Condition',
+    default: '',
+    description: 'The condition the contract call response must pass.',
+    placeholder: '>1000'
+  },
+  {
+    option: 'error',
+    label: 'Error',
+    default: `Contract call response doesn't pass condition.`,
+    description: 'The error to display to the author.'
+  },
+]
+
 const verifyAuthorAddress = (publication, chainTicker) => {
   const authorAddress = publication.author.wallets?.[chainTicker]?.address
   const wallet = publication.author.wallets?.[chainTicker]
@@ -30,7 +67,9 @@ const conditionHasUnsafeCharacters = (condition) => {
   return unsafeCharacters !== ''
 }
 
-const getChallengeVerification = async ({chainTicker = '', address = '', abi = '', condition = ''} = {}, challengeAnswer, publication) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+  let {chainTicker, address, abi, condition, error} = subplebbitChallengeSettings?.options || {}
+
   if (!chainTicker) {
     throw Error('missing option chainTicker')
   }
@@ -44,6 +83,8 @@ const getChallengeVerification = async ({chainTicker = '', address = '', abi = '
   if (!condition) {
     throw Error('missing option abi')
   }
+
+  const publication = challengeRequestMessage.publication
 
   const authorAddress = publication.author.wallets?.[chainTicker]?.address
   if (!authorAddress) {
@@ -82,7 +123,7 @@ const getChallengeVerification = async ({chainTicker = '', address = '', abi = '
   if (!eval(`${contractCallResponse} ${condition}`)) {
     return {
       success: false,
-      error: `Contract call response doesn't pass condition.`
+      error: error || `Contract call response doesn't pass condition.`
     }
   }
 
@@ -91,4 +132,13 @@ const getChallengeVerification = async ({chainTicker = '', address = '', abi = '
   }
 }
 
-module.exports = {getChallengeVerification}
+function SubplebbitChallengeFile (subplebbitChallengeSettings) {
+  let {chainTicker} = subplebbitChallengeSettings?.options || {}
+  if (!chainTicker) {
+    throw Error('missing option chainTicker')
+  }
+  const type = 'chain/' + chainTicker
+  return {getChallenge, optionInputs, type}
+}
+
+module.exports = SubplebbitChallengeFile
