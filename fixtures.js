@@ -1,12 +1,20 @@
 const path = require('path')
 
+// mock the challenges included in plebbit-js
+const Plebbit = {
+  challenges: {
+    'text-math': require(path.join(__dirname, 'plebbit-js-challenges', 'text-math')),
+    'captcha-canvas-v3': require(path.join(__dirname, 'plebbit-js-challenges', 'captcha-canvas-v3'))
+  }
+}
+
 // define mock Subplebbit instances
 const textMathChallegeSubplebbit = {
   title: 'text-math challenge subplebbit',
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'text-math'),
+        name: 'text-math',
         options: {difficulty: '3'},
         description: 'Complete a math challenge.'
       }
@@ -18,7 +26,7 @@ const captchaAndMathChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'captcha-canvas-v3'),
+        name: 'captcha-canvas-v3',
         options: {
           width: '600', 
           height: '400',
@@ -28,7 +36,7 @@ const captchaAndMathChallegeSubplebbit = {
         description: 'Complete a captcha challenge.'
       },
       {
-        path: path.join(__dirname, 'challenges', 'text-math'),
+        name: 'text-math',
         options: {difficulty: '2'},
         description: 'Complete a math challenge.'
       }
@@ -40,7 +48,7 @@ const excludeHighKarmaChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'text-math'),
+        name: 'text-math',
         options: {difficulty: '3'},
         // exclude if the author match any one item in the array
         exclude: [
@@ -254,11 +262,11 @@ const challengeAnswers = {
 }
 
 const subplebbits = [
-  textMathChallegeSubplebbit, 
+  // textMathChallegeSubplebbit, 
   captchaAndMathChallegeSubplebbit, 
   // excludeHighKarmaChallegeSubplebbit,
   // excludeAccountAgeChallegeSubplebbit,
-  // whitelistChallegeSubplebbit,
+  whitelistChallegeSubplebbit,
   // blacklistChallegeSubplebbit,
   // erc20PaymentChallegeSubplebbit,
   // evmContractCallChallegeSubplebbit,
@@ -268,4 +276,4 @@ const subplebbits = [
   // twoOutOf4SuccessInverseChallegeSubplebbit
 ]
 
-module.exports = {subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers}
+module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers}

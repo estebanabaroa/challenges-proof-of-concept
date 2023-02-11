@@ -4,31 +4,42 @@
 // list of challenges included with plebbit-js
 Plebbit.challenges = {[challengeName: string]: SubplebbitChallengeFile}
 
-ChallengeRequestMessage { // new props 
+// new props 
+ChallengeRequestMessage {
   encryptedChallengeCommentCids?: Encrypted<string[]> // some challenges could require including comment cids in other subs, like friendly subplebbit karma challenges
-  encryptedChallengeAnswers: Encrypted // some challenges might be included in subplebbit.challenges
+  encryptedChallengeAnswers: Encrypted<string[]> // some challenges might be included in subplebbit.challenges
 }
-SubplebbitChallenge { // the public information to display to the user about the challenge, included in Subplebbit.challenges
+Subplebbit {
+  // challenges is public, part of the IPNS record
+  challenges: SubplebbitChallenge[]
+  // settings is private, not part of the IPNS record
+  settings: {
+    challenges: SubplebbitChallengeSettings[]
+  }
+}
+
+// challenges types
+SubplebbitChallenge { // copy values from private subplebbit.settings and publish to subplebbit.challenges
+  exclude?: Exclude[] // copied from subplebbit.settings.challenges.exclude
+  description?: string // copied from subplebbit.settings.challenges.description
+  challenge?: string // copied from SubplebbitChallengeFile.challenge
+  type?: // copied from SubplebbitChallengeFile.type
+}
+SubplebbitChallengeSettings { // the private settings of the challenge (subplebbit.settings.challenges)
+  path?: string // (only if name is undefined) the path to the challenge js file, used to get the props SubplebbitChallengeFile {optionInputs, type, getChallenge}
+  name?: string // (only if path is undefined) the challengeName from Plebbit.challenges to identify it
+  options?: [optionPropertyName: string]: string // the options to be used to the getChallenge function, all values must be strings for UI ease of use
   exclude?: Exclude[] // singular because it only has to match 1 exclude, the client must know the exclude setting to configure what challengeCommentCids to send
-  description?: string // describe to the user what kind of challenge they will receive for publishing
-  challenge?: string // some challenges can be asked before the user publishes, like a password for example
-  type?: 'image' | 'text' | 'audio' | 'video' | 'html'
-}
-SubplebbitChallengeSettings extends SubplebbitChallenge { // the private settings of the challenge (subplebbit.settings.challenges)
-  name?: string // if the challenge has no path, use the challengeName from Plebbit.challenges to identify it
-  path?: string // the path to the challenge js file, used to get the props SubplebbitChallengeFile {optionInputs, type, getChallenge} 
-  options?: GetChallengeOptions // the options argument to be passed to the getChallenge function
-  optionInputs?: OptionInput[] // the options inputs fields to display to the user
-  getChallenge: (c?: SubplebbitChallengeSettings, r?: ChallengeRequestMessage, a?: ChallengeAnswerMessage): GetChallengeResult | ChallengeAndAnswer
+  description?: string // describe in the frontend what kind of challenge the user will receive when publishing
 }
 SubplebbitChallengeFile { // the result of the function exported by the challenge file
-  optionInputs?: SubplebbitChallengeSettings.getChallenge.optionInputs
-  type: SubplebbitChallenge.type
-  challenge?: string // some challenges can be asked before the user publishes, like a password for example
-  getChallenge: SubplebbitChallengeSettings.getChallenge
+  optionInputs?: OptionInput[] // the options inputs fields to display to the user
+  type: 'image' | 'text' | 'audio' | 'video' | 'html'
+  challenge?: string // some challenges can be static and asked before the user publishes, like a password for example
+  getChallenge: GetChallengeFunction
 }
-GetChallengeOptions {
-  [optionPropertyName: string]: string // all values must be strings for UI ease of use
+GetChallengeFunction {
+  (challenge: SubplebbitChallengeSettings, challengeRequest: ChallengeRequestMessage, challengeAnswer: ChallengeAnswerMessage): GetChallengeResult | ChallengeAndAnswer
 }
 ChallengeAndAnswer { // if the result of a challenge can't be optained by getChallenge(), return a challenge
   challenge: string // e.g. '2 + 2'
