@@ -172,7 +172,7 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
   }
 }
 
-function SubplebbitChallengeFile (subplebbitChallengeSettings) {
+function SubplebbitChallengeFileFactory (subplebbitChallengeSettings) {
   let {chainTicker} = subplebbitChallengeSettings?.options || {}
   if (!chainTicker) {
     throw Error('missing option chainTicker')
@@ -181,4 +181,4 @@ function SubplebbitChallengeFile (subplebbitChallengeSettings) {
   return {getChallenge, optionInputs, type}
 }
 
-module.exports = SubplebbitChallengeFile
+module.exports = SubplebbitChallengeFileFactory

@@ -31,7 +31,7 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
   }
 }
 
-function SubplebbitChallengeFile (subplebbitChallengeSettings) {
+function SubplebbitChallengeFileFactory (subplebbitChallengeSettings) {
   // some challenges can prepublish the challenge so that it can be preanswered
   // in the challengeRequestMessage
   const question = subplebbitChallengeSettings?.options?.question
@@ -40,4 +40,4 @@ function SubplebbitChallengeFile (subplebbitChallengeSettings) {
   return {getChallenge, optionInputs, type, challenge}
 }
 
-module.exports = SubplebbitChallengeFile
+module.exports = SubplebbitChallengeFileFactory
