@@ -1,11 +1,40 @@
 const path = require('path')
+const {EventEmitter} = require('events')
+
+// mock comment instance
+class Comment extends EventEmitter {
+  constructor() {
+    super()
+    this.subplebbitAddress = 'friendly-sub.eth'
+    this.ipnsName = 'Qm...'
+  }
+  async update() {
+    setTimeout(() => {
+      this.author = {
+        subplebbit: {
+          postScore: 1000,
+          replyScore: 1000,
+          firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*999
+        }
+      }
+      this.updatedAt = Math.round(Date.now() / 1000)
+      this.emit('update', this)
+    }, 100)
+  }
+  stop() {}
+}
+
+// mock plebbit
+const Plebbit = () => {
+  return {
+    getComment: async () => new Comment()
+  }
+}
 
 // mock the challenges included in plebbit-js
-const Plebbit = {
-  challenges: {
-    'text-math': require(path.join(__dirname, 'plebbit-js-challenges', 'text-math')),
-    'captcha-canvas-v3': require(path.join(__dirname, 'plebbit-js-challenges', 'captcha-canvas-v3'))
-  }
+Plebbit.challenges = {
+  'text-math': require(path.join(__dirname, 'plebbit-js-challenges', 'text-math')),
+  'captcha-canvas-v3': require(path.join(__dirname, 'plebbit-js-challenges', 'captcha-canvas-v3'))
 }
 
 // define mock Subplebbit instances
@@ -375,6 +404,11 @@ const results = {
       ]
     }
   }
+}
+
+// add mock plebbit to add the mock subplebbit instances
+for (const subplebbit of subplebbits) {
+  subplebbit.plebbit = Plebbit()
 }
 
 module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers, results}

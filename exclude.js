@@ -1,94 +1,7 @@
-
-const getComment = async (cid) => {
-  return {
-    subplebbitAddress: 'friendly-sub.eth',
-    ipnsName: 'Qm...'
-  }
-}
-
-const getCommentUpdate = async (ipnsName) => {
-  return {
-    author: {
-      subplebbit: {
-        postScore: 1000,
-        replyScore: 1000,
-        firstCommentTimestamp: Date.now() - 1000*60*60*24*999
-      }
-    }
-  }
-}
+const TinyCache = require('tinycache')
 
 // e.g. secondsToGoBack = 60 would return the timestamp 1 minute ago
 const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
-
-const shouldExcludeAuthorCommentCids = async (challenge, commentCids) => {
-  // console.log({challenge, commentCids})
-  for (const exclude of challenge.exclude || []) {
-    const {addresses, maxCommentCids, postScore, replyScore, firstCommentTimestamp} = exclude?.subplebbit || {}
-
-    // console.log({maxCommentCids, addresses, firstCommentTimestamp, postScore, replyScore, commentCids})
-
-    // no friendly sub addresses
-    if (!addresses?.length) {
-      continue
-    }
-    const addressesSet = new Set(addresses)
-
-    // author didn't provide comment cids
-    if (!commentCids?.length) {
-      continue
-    }
-
-    // fetch comments of the author
-    const comments = []
-    let i = 0
-    while (i < maxCommentCids) {
-      const commentCid = commentCids[i++]
-      if (commentCid) {
-        comments.push(await getComment(commentCid))
-      }
-    }
-
-    const commentsInFriendlySubs = []
-    for (const comment of comments) {
-      if (addressesSet.has(comment.subplebbitAddress)) {
-        commentsInFriendlySubs.push(comment)
-      }
-    }
-    // author didn't provide comments in friendly subs
-    if (!commentsInFriendlySubs.length) {
-      continue
-    }
-
-    // fetch comment updates to have access to 
-    for (const i in commentsInFriendlySubs) {
-      commentsInFriendlySubs[i].update = await getCommentUpdate(commentsInFriendlySubs[i].ipnsName)
-    }
-
-    // filter comments with minimum karma based on the challenge karma options
-    const commentsWithMinimumKarmaAndAge = []
-    for (const comment of commentsInFriendlySubs) {
-      // an author must match ALL defined filters
-      if (
-        (postScore === undefined || (comment.update.author.subplebbit.postScore || 0) >= postScore) &&
-        (replyScore === undefined || (comment.update.author.subplebbit.replyScore || 0) >= replyScore) &&
-        // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
-        (firstCommentTimestamp === undefined || (comment.update.author.subplebbit.firstCommentTimestamp || Infinity) <= getTimestampSecondsAgo(firstCommentTimestamp))
-      ) {
-        commentsWithMinimumKarmaAndAge.push(comment)
-      }
-    }
-
-    // author doesn't have the minimum karma
-    if (!commentsWithMinimumKarmaAndAge.length) {
-      continue
-    }
-
-    // author has the minimum karma for the exclude item
-    return true
-  }
-  return false
-}
 
 function shouldExcludeAuthor(subplebbitChallenge, author) {
   if (!subplebbitChallenge.exclude) {
@@ -162,6 +75,104 @@ function shouldExcludeChallengeSuccess(subplebbitChallenge, challengeResults) {
       return true
     }
   }
+  return false
+}
+
+const cache = new TinyCache()
+const cacheTime = 1000 * 60 * 60
+const addToCache = (key, value) => {
+  cache.put(key, JSON.parse(JSON.stringify(value)))
+}
+
+const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) => {
+  const getComment = async (commentCid, addressesSet) => {
+    let comment = cache.get(commentCid)
+    if (!comment) {
+      comment = await plebbit.getComment(commentCid)
+      addToCache(commentCid, comment)
+    }
+    if (!addressesSet.has(comment.subplebbitAddress)) {
+      throw Error(`comment doesn't have subplebbit address`)
+    }
+
+    // comment hasn't been updated yet
+    if (!comment.updatedAt) {
+      const commentUpdatePromise = new Promise((resolve) => {
+        comment.once('update', resolve)
+      })
+      await comment.update()
+      await commentUpdatePromise
+      comment.stop()
+    }
+
+    return comment
+  }
+
+  const testComment = async (commentCid, addressesSet, exclude) => {
+    const comment = await getComment(commentCid, addressesSet, plebbit)
+    const {postScore, replyScore, firstCommentTimestamp} = exclude?.subplebbit || {}
+    if (
+      (postScore === undefined || (comment.author.subplebbit.postScore || 0) >= postScore) &&
+      (replyScore === undefined || (comment.author.subplebbit.replyScore || 0) >= replyScore) &&
+      // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
+      (firstCommentTimestamp === undefined || (comment.author.subplebbit.firstCommentTimestamp || Infinity) <= getTimestampSecondsAgo(firstCommentTimestamp))
+    ) {
+      // do nothing, test passed
+    }
+    throw Error(`should not exclude comment cid`)
+  }
+
+  const testExclude = async (exclude) => {
+    const {addresses, maxCommentCids} = exclude?.subplebbit || {}
+
+    // no friendly sub addresses
+    if (!addresses?.length) {
+      throw Error('no friendly sub addresses')
+    }
+    const addressesSet = new Set(addresses)
+
+    // author didn't provide comment cids
+    if (!commentCids?.length) {
+      throw Error(`author didn't provide comment cids`)
+    }
+
+    // fetch and test all comments of the author async
+    const testCommentPromises = []
+    let i = 0
+    while (i < maxCommentCids) {
+      const commentCid = commentCids[i++]
+      if (commentCid) {
+        testCommentPromises.push(testComment(commentCid, addressesSet, exclude))
+      }
+    }
+
+    // if doesn't throw, at least 1 test comment promise passed
+    try {
+      await Promise.any(testCommentPromises)
+    }
+    catch (e) {
+      e.message = `should not exclude: ${e.message}`
+      throw Error(e)
+    }
+
+    // if exclude test passed, do nothing
+  }
+
+  // iterate over all excludes, and test them async
+  const testExcludePromise = []
+  for (const exclude of challenge.exclude || []) {
+    const {addresses, maxCommentCids} = exclude?.subplebbit || {}
+    testExcludePromise.push(exclude)
+  }
+
+  // if at least 1 test passed, should exclude
+  try {
+    await Promise.any(testExcludePromise)
+    return true
+  }
+  catch (e) {}
+
+  // if no exlucde test passed. should not exclude
   return false
 }
 

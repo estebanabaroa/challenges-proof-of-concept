@@ -51,7 +51,7 @@ const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, su
     if (shouldExcludeAuthor(subplebbitChallenge, challengeRequestMessage.publication.author)) {
       continue
     }
-    if (await shouldExcludeAuthorCommentCids(subplebbitChallenge, challengeRequestMessage.challengeCommentCids)) {
+    if (await shouldExcludeAuthorCommentCids(subplebbitChallenge, challengeRequestMessage.challengeCommentCids, subplebbit.plebbit)) {
       continue
     }
 
