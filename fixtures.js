@@ -276,4 +276,105 @@ const subplebbits = [
   twoOutOf4SuccessInverseChallegeSubplebbit
 ]
 
-module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers}
+const results = {
+  'text-math challenge subplebbit': {
+    'high-karma.eth': {
+      pendingChallenges: [ { challenge: '660 - 256', answer: '404', type: 'text' } ]
+    },
+    'low-karma.eth': {
+      pendingChallenges: [ { challenge: '69 * 63', answer: '4347', type: 'text' } ]
+    }
+  },
+  'captcha and math challenge subplebbit': {
+    'high-karma.eth': {
+      pendingChallenges: [
+        { challenge: '10 - 2', answer: '8', type: 'text' },
+        { challenge: '94 + 25', answer: '119', type: 'text' }
+      ]
+    },
+    'low-karma.eth': {
+      pendingChallenges: [
+        { challenge: '7 - 7', answer: '0', type: 'text' },
+        { challenge: '99 - 90', answer: '9', type: 'text' }
+      ]
+    }
+  },
+  'exclude high karma challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      pendingChallenges: [ { challenge: '82 * 45', answer: '3690', type: 'text' } ]
+    }
+  },
+  'exclude account age challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "You're not allowed to publish." ]
+    }
+  },
+  'whitelist challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "You're not whitelisted." ]
+    }
+  },
+  'blacklist challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "You're blacklisted." ]
+    }
+  },
+  'erc20 payment challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "Author doesn't have wallet (eth) set." ]
+    }
+  },
+  'evm contract call challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "Author doesn't have a wallet set." ]
+    }
+  },
+  'password challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': { challengeSuccess: false, challengeErrors: [ 'Wrong answer.' ] }
+  },
+  'exclude friendly sub karma challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [ "You're not allowed to publish." ]
+    }
+  },
+  '2 out of 4 success challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [
+        "You're not allowed to publish.",
+        "You're not allowed to publish.",
+        "You're blacklisted.",
+        "You're blacklisted."
+      ]
+    }
+  },
+  '2 out of 4 success inverse challenge subplebbit': {
+    'high-karma.eth': { challengeSuccess: true },
+    'low-karma.eth': {
+      challengeSuccess: false,
+      challengeErrors: [
+        "You're blacklisted.",
+        "You're blacklisted.",
+        "You're not allowed to publish.",
+        "You're not allowed to publish."
+      ]
+    }
+  }
+}
+
+module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers, results}

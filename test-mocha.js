@@ -1,6 +1,8 @@
-const {getChallengeResultOrPendingChallenges, plebbitJsChallenges} = require('./challenges')
+require('util').inspect.defaultOptions.depth = null
+
+const {getChallengeResultOrPendingChallenges, plebbitJsChallenges, getSubplebbitChallengeFromSubplebbitChallengeSettings} = require('./challenges')
 const {expect} = require('chai')
-const {subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids} = require('./fixtures')
+const {subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids, results} = require('./fixtures')
 
 describe("plebbitJsChallenges", () => {
   let TextMathFactory = plebbitJsChallenges['text-math']
@@ -42,8 +44,44 @@ describe("getChallengesResultAndPendingChallenges", () => {
         }
 
         const challengeResult = await getChallengeResultOrPendingChallenges(challengeRequestMessage, subplebbit)
-        console.log({challengeResult})
+        const expectedChallengeResult = results[subplebbit.title][author.address]
+        expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
+        expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
+        expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)
+        if (challengeResult.pendingChallenges?.length) {
+          for (const [challengeIndex] of challengeResult.pendingChallenges.entries()) {
+            expect(challengeResult.pendingChallenges[challengeIndex].type).to.not.equal(undefined)
+            expect(challengeResult.pendingChallenges[challengeIndex].challenge).to.not.equal(undefined)
+            expect(challengeResult.pendingChallenges[challengeIndex].answer).to.not.equal(undefined)
+            expect(challengeResult.pendingChallenges[challengeIndex].type).to.equal(expectedChallengeResult.pendingChallenges[challengeIndex].type)
+            expect(typeof challengeResult.pendingChallenges[challengeIndex].challenge).to.equal(typeof expectedChallengeResult.pendingChallenges[challengeIndex].challenge)
+            expect(typeof challengeResult.pendingChallenges[challengeIndex].answer).to.equal(typeof expectedChallengeResult.pendingChallenges[challengeIndex].answer)
+          }
+        }
       }
     })
   }
+})
+
+describe("getSubplebbitChallengeFromSubplebbitChallengeSettings", () => {
+  it("has challenge prop", () => {
+    const subplebbit = subplebbits.filter(subplebbit => subplebbit.title === 'password challenge subplebbit')[0]
+    const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbit.settings.challenges[0])
+    expect(typeof subplebbitChallenge.challenge).to.equal('string')
+    expect(subplebbitChallenge.challenge).to.equal(subplebbit.settings.challenges[0].options.question)
+  })
+
+  it("has description prop", () => {
+    const subplebbit = subplebbits.filter(subplebbit => subplebbit.title === 'text-math challenge subplebbit')[0]
+    const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbit.settings.challenges[0])
+    expect(typeof subplebbitChallenge.description).to.equal('string')
+    expect(subplebbitChallenge.description).to.equal(subplebbit.settings.challenges[0].description)
+  })
+
+  it("has exclude prop", () => {
+    const subplebbit = subplebbits.filter(subplebbit => subplebbit.title === 'exclude high karma challenge subplebbit')[0]
+    const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbit.settings.challenges[0])
+    expect(subplebbitChallenge.exclude).to.not.equal(undefined)
+    expect(subplebbitChallenge.exclude).to.deep.equal(subplebbit.settings.challenges[0].exclude)
+  })
 })
