@@ -2,16 +2,10 @@
   "name": "plebbit-challenges",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test-mocha.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/estebanabaroa/challenges-proof-of-concept.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/estebanabaroa/challenges-proof-of-concept/issues"
-  },
-  "homepage": "https://github.com/estebanabaroa/challenges-proof-of-concept#readme"
+  "dependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.1.0"
+  }
 }

@@ -2,7 +2,7 @@
 
 ```javascript
 // list of challenges included with plebbit-js
-Plebbit.challenges = {[challengeName: string]: SubplebbitChallengeFile}
+Plebbit.challenges = {[challengeName: string]: ChallengeFile}
 
 // new props 
 ChallengeRequestMessage {
@@ -22,17 +22,17 @@ Subplebbit {
 SubplebbitChallenge { // copy values from private subplebbit.settings and publish to subplebbit.challenges
   exclude?: Exclude[] // copied from subplebbit.settings.challenges.exclude
   description?: string // copied from subplebbit.settings.challenges.description
-  challenge?: string // copied from SubplebbitChallengeFile.challenge
-  type?: // copied from SubplebbitChallengeFile.type
+  challenge?: string // copied from ChallengeFile.challenge
+  type?: // copied from ChallengeFile.type
 }
 SubplebbitChallengeSettings { // the private settings of the challenge (subplebbit.settings.challenges)
-  path?: string // (only if name is undefined) the path to the challenge js file, used to get the props SubplebbitChallengeFile {optionInputs, type, getChallenge}
+  path?: string // (only if name is undefined) the path to the challenge js file, used to get the props ChallengeFile {optionInputs, type, getChallenge}
   name?: string // (only if path is undefined) the challengeName from Plebbit.challenges to identify it
   options?: [optionPropertyName: string]: string // the options to be used to the getChallenge function, all values must be strings for UI ease of use
   exclude?: Exclude[] // singular because it only has to match 1 exclude, the client must know the exclude setting to configure what challengeCommentCids to send
   description?: string // describe in the frontend what kind of challenge the user will receive when publishing
 }
-SubplebbitChallengeFile { // the result of the function exported by the challenge file
+ChallengeFile { // the result of the function exported by the challenge file
   optionInputs?: OptionInput[] // the options inputs fields to display to the user
   type: 'image' | 'text' | 'audio' | 'video' | 'html'
   challenge?: string // some challenges can be static and asked before the user publishes, like a password for example

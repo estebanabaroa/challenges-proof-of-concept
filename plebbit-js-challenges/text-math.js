@@ -65,8 +65,8 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
   return {challenge, answer, type}
 }
 
-function SubplebbitChallengeFileFactory (subplebbitChallengeSettings) {
+function ChallengeFileFactory (subplebbitChallengeSettings) {
   return {getChallenge, optionInputs, type}
 }
 
-module.exports = SubplebbitChallengeFileFactory
+module.exports = ChallengeFileFactory

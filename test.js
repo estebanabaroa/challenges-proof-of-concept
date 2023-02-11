@@ -34,15 +34,15 @@ const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, chall
       for (let [challengeIndex, subplebbitChallengeSettings] of subplebbit.settings.challenges.entries()) {
 
         // if the challenge is an external file, fetch it and override the subplebbitChallengeSettings values
-        let subplebbitChallengeFile
+        let challengeFile
         if (subplebbitChallengeSettings.path) {
-          const SubplebbitChallengeFileFactory = require(subplebbitChallengeSettings.path)
-          subplebbitChallengeFile = SubplebbitChallengeFileFactory(subplebbitChallengeSettings)
+          const ChallengeFileFactory = require(subplebbitChallengeSettings.path)
+          challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
         }
         // else, the challenge is included with plebbit-js
         else if (subplebbitChallengeSettings.name) {
-          const SubplebbitChallengeFileFactory = Plebbit.challenges[subplebbitChallengeSettings.name]
-          subplebbitChallengeFile = SubplebbitChallengeFileFactory(subplebbitChallengeSettings)
+          const ChallengeFileFactory = Plebbit.challenges[subplebbitChallengeSettings.name]
+          challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
         }
 
         // the public data published to subplebbit.challenges
@@ -51,7 +51,7 @@ const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, chall
 
         // we don't have the challenge answer message yet
         const challengeAnswerMessage = undefined
-        const challengeResult = await subplebbitChallengeFile.getChallenge(subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex)
+        const challengeResult = await challengeFile.getChallenge(subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex)
         challengeResults.push(challengeResult)
       }
 
@@ -126,17 +126,17 @@ const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, chall
 // get the data to be published publicly to subplebbit.challenges
 function getChallengeFromChallengeSettings(subplebbitChallengeSettings) {
   // if the challenge is an external file, fetch it and override the subplebbitChallengeSettings values
-  let subplebbitChallengeFile
+  let challengeFile
   if (subplebbitChallengeSettings.path) {
-    const SubplebbitChallengeFileFactory = require(subplebbitChallengeSettings.path)
-    subplebbitChallengeFile = SubplebbitChallengeFileFactory(subplebbitChallengeSettings)
+    const ChallengeFileFactory = require(subplebbitChallengeSettings.path)
+    challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
   }
   // else, the challenge is included with plebbit-js
   else if (subplebbitChallengeSettings.name) {
-    const SubplebbitChallengeFileFactory = Plebbit.challenges[subplebbitChallengeSettings.name]
-    subplebbitChallengeFile = SubplebbitChallengeFileFactory(subplebbitChallengeSettings)
+    const ChallengeFileFactory = Plebbit.challenges[subplebbitChallengeSettings.name]
+    challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
   }
-  const {challenge, type} = subplebbitChallengeFile
+  const {challenge, type} = challengeFile
   const {exclude, description} = subplebbitChallengeSettings
   return {exclude, description, challenge, type}
 }

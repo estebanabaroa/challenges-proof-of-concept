@@ -262,18 +262,18 @@ const challengeAnswers = {
 }
 
 const subplebbits = [
-  // textMathChallegeSubplebbit, 
+  textMathChallegeSubplebbit, 
   captchaAndMathChallegeSubplebbit, 
-  // excludeHighKarmaChallegeSubplebbit,
-  // excludeAccountAgeChallegeSubplebbit,
+  excludeHighKarmaChallegeSubplebbit,
+  excludeAccountAgeChallegeSubplebbit,
   whitelistChallegeSubplebbit,
-  // blacklistChallegeSubplebbit,
-  // erc20PaymentChallegeSubplebbit,
-  // evmContractCallChallegeSubplebbit,
-  // passwordChallegeSubplebbit,
-  // excludeFriendlySubKarmaChallegeSubplebbit,
-  // twoOutOf4SuccessChallegeSubplebbit,
-  // twoOutOf4SuccessInverseChallegeSubplebbit
+  blacklistChallegeSubplebbit,
+  erc20PaymentChallegeSubplebbit,
+  evmContractCallChallegeSubplebbit,
+  passwordChallegeSubplebbit,
+  excludeFriendlySubKarmaChallegeSubplebbit,
+  twoOutOf4SuccessChallegeSubplebbit,
+  twoOutOf4SuccessInverseChallegeSubplebbit
 ]
 
 module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers}
