@@ -1,4 +1,5 @@
 const TinyCache = require('tinycache')
+const QuickLRU = require('quick-lru')
 
 // e.g. secondsToGoBack = 60 would return the timestamp 1 minute ago
 const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
@@ -78,34 +79,56 @@ function shouldExcludeChallengeSuccess(subplebbitChallenge, challengeResults) {
   return false
 }
 
-const cache = new TinyCache()
-const cacheTime = 1000 * 60 * 60
-const addToCache = (key, value) => {
-  cache.put(key, JSON.parse(JSON.stringify(value)))
-}
+// caches for fetching comments
+const commentUpdateCache = new TinyCache()
+const commentUpdateCacheTime = 1000 * 60 * 60
+const commentCache = new QuickLRU({maxSize: 10000})
+const invalidIpnsName = 'i'
 
 const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) => {
   const getComment = async (commentCid, addressesSet) => {
-    let comment = cache.get(commentCid)
-    if (!comment) {
+    // comment is cached
+    let cachedComment = commentCache.get(commentCid)
+
+    // comment is not cached, add to cache
+    let comment
+    if (!cachedComment) {
       comment = await plebbit.getComment(commentCid)
-      addToCache(commentCid, comment)
+      // only cache useful values
+      cachedComment = {ipnsName: comment.ipnsName || invalidIpnsName, subplebbitAddress: comment.subplebbitAddress}
+      commentCache.set(commentCid, cachedComment)
     }
-    if (!addressesSet.has(comment.subplebbitAddress)) {
+
+    // comment has no ipns name
+    if (cachedComment?.ipnsName === invalidIpnsName) {
+      throw Error('comment has invalid ipns name')
+    }
+
+    // subplebbit address doesn't match filter
+    if (!addressesSet.has(cachedComment.subplebbitAddress)) {
       throw Error(`comment doesn't have subplebbit address`)
     }
 
     // comment hasn't been updated yet
-    if (!comment.updatedAt) {
-      const commentUpdatePromise = new Promise((resolve) => {
-        comment.once('update', resolve)
-      })
-      await comment.update()
+    let cachedCommentUpdate = commentUpdateCache.get(cachedComment.ipnsName)
+    if (!cachedCommentUpdate) {
+      let commentUpdate = comment
+      if (!commentUpdate) {
+        commentUpdate = await plebbit.createComment({cid: commentCid, ipnsName: commentCache.ipnsName})
+      }
+      const commentUpdatePromise = new Promise((resolve) => commentUpdate.once('update', resolve))
+      await commentUpdate.update()
       await commentUpdatePromise
-      comment.stop()
+      commentUpdate.stop()
+      // only cache useful values
+      cachedCommentUpdate = {}
+      if (commentUpdate?.author?.subplebbit) {
+        cachedCommentUpdate.author = {subplebbit: commentUpdate?.author?.subplebbit}
+      }
+      commentUpdateCache.put(cachedComment.ipnsName, cachedCommentUpdate, commentUpdateCacheTime)
     }
 
-    return comment
+    return {...cachedComment, ...cachedCommentUpdate}
   }
 
   const testComment = async (commentCid, addressesSet, exclude) => {
