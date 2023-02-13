@@ -1,4 +1,4 @@
-require('util').inspect.defaultOptions.depth = null
+// require('util').inspect.defaultOptions.depth = null
 
 const {getChallengeResultOrPendingChallenges, plebbitJsChallenges, getSubplebbitChallengeFromSubplebbitChallengeSettings} = require('./challenges')
 const {expect} = require('chai')
@@ -45,6 +45,7 @@ describe("getChallengesResultAndPendingChallenges", () => {
 
         const challengeResult = await getChallengeResultOrPendingChallenges(challengeRequestMessage, subplebbit)
         const expectedChallengeResult = results[subplebbit.title][author.address]
+        console.log({challengeResult, expectedChallengeResult})
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)
@@ -64,6 +65,11 @@ describe("getChallengesResultAndPendingChallenges", () => {
 })
 
 describe("getSubplebbitChallengeFromSubplebbitChallengeSettings", () => {
+  // skip these tests when soloing subplebbits
+  if (subplebbits.length < 5) {
+    return
+  }
+
   it("has challenge prop", () => {
     const subplebbit = subplebbits.filter(subplebbit => subplebbit.title === 'password challenge subplebbit')[0]
     const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbit.settings.challenges[0])

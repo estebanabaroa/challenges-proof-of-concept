@@ -5,6 +5,13 @@ const QuickLRU = require('quick-lru')
 const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
 
 function shouldExcludeAuthor(subplebbitChallenge, author) {
+  if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
+    throw Error(`shouldExcludeAuthor invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
+  }
+  if (author && typeof author !== 'object') {
+    throw Error(`shouldExcludeAuthor invalid author argument '${author}'`)
+  }
+
   if (!subplebbitChallenge.exclude) {
     return false
   }
@@ -46,6 +53,13 @@ function shouldExcludeAuthor(subplebbitChallenge, author) {
 }
 
 function shouldExcludeChallengeSuccess(subplebbitChallenge, challengeResults) {
+  if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
+    throw Error(`shouldExcludeChallengeSuccess invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
+  }
+  if (challengeResults && !Array.isArray(challengeResults)) {
+    throw Error(`shouldExcludeChallengeSuccess invalid challengeResults argument '${challengeResults}'`)
+  }
+
   // no challenge results or no exclude rules
   if (!challengeResults?.length || !subplebbitChallenge.exclude?.length) {
     return false
@@ -79,14 +93,26 @@ function shouldExcludeChallengeSuccess(subplebbitChallenge, challengeResults) {
   return false
 }
 
-// caches for fetching comments
-const commentUpdateCache = new TinyCache()
-const commentUpdateCacheTime = 1000 * 60 * 60
+// cache for fetching comment cids, never expire
 const commentCache = new QuickLRU({maxSize: 10000})
 const invalidIpnsName = 'i'
+// cache for fetching comment updates, expire after 1 day
+const commentUpdateCache = new TinyCache()
+const commentUpdateCacheTime = 1000 * 60 * 60
+const getCommentPending = {}
 
-const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) => {
-  const getComment = async (commentCid, addressesSet) => {
+const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, plebbit) => {
+  if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
+    throw Error(`shouldExcludeAuthorCommentCids invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
+  }
+  if (commentCids && !Array.isArray(commentCids)) {
+    throw Error(`shouldExcludeAuthorCommentCids invalid commentCids argument '${commentCids}'`)
+  }
+  if (typeof plebbit?.getComment !== 'function') {
+    throw Error(`shouldExcludeAuthorCommentCids invalid plebbit argument '${plebbit}'`)
+  }
+
+  const _getComment = async (commentCid, addressesSet) => {
     // comment is cached
     let cachedComment = commentCache.get(commentCid)
 
@@ -119,16 +145,38 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) =
       const commentUpdatePromise = new Promise((resolve) => commentUpdate.once('update', resolve))
       await commentUpdate.update()
       await commentUpdatePromise
-      commentUpdate.stop()
+      await commentUpdate.stop()
       // only cache useful values
       cachedCommentUpdate = {}
       if (commentUpdate?.author?.subplebbit) {
         cachedCommentUpdate.author = {subplebbit: commentUpdate?.author?.subplebbit}
       }
       commentUpdateCache.put(cachedComment.ipnsName, cachedCommentUpdate, commentUpdateCacheTime)
+      commentUpdateCache._timeouts[cachedComment.ipnsName].unref?.()
     }
 
     return {...cachedComment, ...cachedCommentUpdate}
+  }
+
+  const getComment = async (commentCid, addressesSet) => {
+    // don't fetch the same comment twice
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+    const pendingKey = commentCid + plebbit.plebbitOptions?.ipfsGatewayUrl + plebbit.plebbitOptions?.ipfsHttpClientOptions?.url
+    while (getCommentPending[pendingKey] === true) {
+      await sleep(100)
+    }
+    getCommentPending[pendingKey] = true
+
+    try {
+      const res = await _getComment(commentCid, addressesSet)
+      return res
+    }
+    catch (e) {
+      throw e
+    }
+    finally {
+      getCommentPending[pendingKey] = false
+    }
   }
 
   const testComment = async (commentCid, addressesSet, exclude) => {
@@ -141,12 +189,16 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) =
       (firstCommentTimestamp === undefined || (comment.author.subplebbit.firstCommentTimestamp || Infinity) <= getTimestampSecondsAgo(firstCommentTimestamp))
     ) {
       // do nothing, test passed
+      return
     }
     throw Error(`should not exclude comment cid`)
   }
 
   const testExclude = async (exclude) => {
-    const {addresses, maxCommentCids} = exclude?.subplebbit || {}
+    let {addresses, maxCommentCids} = exclude?.subplebbit || {}
+    if (!maxCommentCids) {
+      maxCommentCids = 3
+    }
 
     // no friendly sub addresses
     if (!addresses?.length) {
@@ -174,6 +226,7 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) =
       await Promise.any(testCommentPromises)
     }
     catch (e) {
+      // console.log(testCommentPromises)
       e.message = `should not exclude: ${e.message}`
       throw Error(e)
     }
@@ -183,9 +236,8 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) =
 
   // iterate over all excludes, and test them async
   const testExcludePromise = []
-  for (const exclude of challenge.exclude || []) {
-    const {addresses, maxCommentCids} = exclude?.subplebbit || {}
-    testExcludePromise.push(exclude)
+  for (const exclude of subplebbitChallenge.exclude || []) {
+    testExcludePromise.push(testExclude(exclude))
   }
 
   // if at least 1 test passed, should exclude
@@ -193,7 +245,9 @@ const shouldExcludeAuthorCommentCids = async (challenge, commentCids, plebbit) =
     await Promise.any(testExcludePromise)
     return true
   }
-  catch (e) {}
+  catch (e) {
+    // console.log(testExcludePromise)
+  }
 
   // if no exlucde test passed. should not exclude
   return false

@@ -7,10 +7,18 @@ const plebbitJsChallenges = {
   'captcha-canvas-v3': captchaCanvasV3
 }
 
+// const getPendingChallengesOrChallengeVerification
 const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, subplebbit) => {
+  if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
+    throw Error(`getPendingChallengesOrChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
+  }
+  if (typeof subplebbit?.plebbit?.getComment !== 'function') {
+    throw Error(`getPendingChallengesOrChallengeVerification invalid subplebbit argument '${subplebbit}' invalid subplebbit.plebbit instance`)
+  }
+
   const challengeResults = []
   // interate over all challenges of the subplebbit, can be more than 1
-  for (let [challengeIndex, subplebbitChallengeSettings] of subplebbit.settings.challenges.entries()) {
+  for (let [challengeIndex, subplebbitChallengeSettings] of subplebbit.settings?.challenges?.entries()) {
 
     // if the challenge is an external file, fetch it and override the subplebbitChallengeSettings values
     let challengeFile
@@ -100,6 +108,10 @@ const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, su
 
 // get the data to be published publicly to subplebbit.challenges
 function getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallengeSettings) {
+  if (!subplebbitChallengeSettings || typeof subplebbitChallengeSettings !== 'object') {
+    throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid subplebbitChallengeSettings argument '${subplebbitChallengeSettings}'`)
+  }
+
   // if the challenge is an external file, fetch it and override the subplebbitChallengeSettings values
   let challengeFile
   if (subplebbitChallengeSettings.path) {

@@ -2,7 +2,7 @@
   "name": "plebbit-challenges",
   "version": "1.0.0",
   "scripts": {
-    "test": "mocha test-mocha.js"
+    "test": "mocha *.test.js"
   },
   "dependencies": {
     "chai": "^4.3.7",

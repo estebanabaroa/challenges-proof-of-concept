@@ -3,33 +3,52 @@ const {EventEmitter} = require('events')
 
 // mock comment instance
 class Comment extends EventEmitter {
-  constructor() {
+  constructor(cid) {
     super()
-    this.subplebbitAddress = 'friendly-sub.eth'
-    this.ipnsName = 'Qm...'
+    const [subplebbitAddress,karma] = cid.replace('Qm...', '').split(',')
+    this.subplebbitAddress = subplebbitAddress
+    this.ipnsName = 'ipns name ' + cid
+
+    // use this value to mock giving 'high' or 'low' karma to the author
+    this.karma = karma
   }
   async update() {
     setTimeout(() => {
-      this.author = {
-        subplebbit: {
-          postScore: 1000,
-          replyScore: 1000,
-          firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*999
+      if (this.karma === 'high') {
+        this.author = {
+          subplebbit: {
+            postScore: 1000,
+            replyScore: 1000,
+            firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*999 // 999 days ago
+          }
         }
       }
-      this.updatedAt = Math.round(Date.now() / 1000)
+      else if (this.karma === 'low') {
+        this.author = {
+          subplebbit: {
+            postScore: 1,
+            replyScore: 1,
+            firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*1 // 1 day ago
+          }
+        }
+      }
       this.emit('update', this)
-    }, 100)
+    }, 100).unref()
   }
-  stop() {}
+  async stop() {
+    this.removeAllListeners()
+  }
 }
 
-// mock plebbit
-const Plebbit = () => {
+// mock plebbit sync
+const createPlebbit = () => {
   return {
-    getComment: async () => new Comment()
+    getComment: async (cid) => new Comment(cid),
+    createComment: async (cid) => new Comment(cid)
   }
 }
+// mock Plebbit async
+const Plebbit = async () => createPlebbit()
 
 // mock the challenges included in plebbit-js
 Plebbit.challenges = {
@@ -281,7 +300,7 @@ const subplebbitAuthors = {
 
 // define mock friendly sub comment cids
 const challengeCommentCids = {
-  [highKarmaAuthor.address]: ['Qm...', 'Qm...']
+  [highKarmaAuthor.address]: ['Qm...friendly-sub.eth,high', 'Qm...friendly-sub.eth,high']
 }
 
 const challengeAnswers = {
@@ -408,7 +427,7 @@ const results = {
 
 // add mock plebbit to add the mock subplebbit instances
 for (const subplebbit of subplebbits) {
-  subplebbit.plebbit = Plebbit()
+  subplebbit.plebbit = createPlebbit()
 }
 
 module.exports = {Plebbit, subplebbits, authors, subplebbitAuthors, challengeCommentCids, challengeAnswers, results}
