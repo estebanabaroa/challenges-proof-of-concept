@@ -4,6 +4,10 @@ const QuickLRU = require('quick-lru')
 // e.g. secondsToGoBack = 60 would return the timestamp 1 minute ago
 const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
 
+const testScore = (excludeScore, authorScore) => excludeScore === undefined || excludeScore <= (authorScore || 0)
+// firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
+const testFirstCommentTimestamp = (excludeTime, authorFirstCommentTimestamp) => excludeTime === undefined || getTimestampSecondsAgo(excludeTime) >= (authorFirstCommentTimestamp || Infinity)
+
 function shouldExcludeAuthor(subplebbitChallenge, author) {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
     throw Error(`shouldExcludeAuthor invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
@@ -30,14 +34,13 @@ function shouldExcludeAuthor(subplebbitChallenge, author) {
 
     // if match all of the exclude item properties, should exclude
     let shouldExclude = true
-    if (exclude.postScore && exclude.postScore > (author.subplebbit?.postScore || 0)) {
+    if (!testScore(exclude.postScore, author.subplebbit?.postScore)) {
       shouldExclude = false
     }
-    if (exclude.replyScore && exclude.replyScore > (author.subplebbit?.replyScore || 0)) {
+    if (!testScore(exclude.replyScore, author.subplebbit?.replyScore)) {
       shouldExclude = false
     }
-    // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
-    if (exclude.firstCommentTimestamp && getTimestampSecondsAgo(exclude.firstCommentTimestamp) < (author.subplebbit?.firstCommentTimestamp || Infinity)) {
+    if (!testFirstCommentTimestamp(exclude.firstCommentTimestamp, author.subplebbit?.firstCommentTimestamp)) {
       shouldExclude = false
     }
     if (exclude.address && !exclude.address.includes(author.address)) {
@@ -179,14 +182,13 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
     }
   }
 
-  const testComment = async (commentCid, addressesSet, exclude) => {
+  const validateComment = async (commentCid, addressesSet, exclude) => {
     const comment = await getComment(commentCid, addressesSet, plebbit)
     const {postScore, replyScore, firstCommentTimestamp} = exclude?.subplebbit || {}
     if (
-      (postScore === undefined || (comment.author.subplebbit.postScore || 0) >= postScore) &&
-      (replyScore === undefined || (comment.author.subplebbit.replyScore || 0) >= replyScore) &&
-      // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
-      (firstCommentTimestamp === undefined || (comment.author.subplebbit.firstCommentTimestamp || Infinity) <= getTimestampSecondsAgo(firstCommentTimestamp))
+      testScore(postScore, comment.author?.subplebbit?.postScore) &&
+      testScore(replyScore, comment.author?.subplebbit?.replyScore) &&
+      testFirstCommentTimestamp(firstCommentTimestamp, comment.author?.subplebbit?.firstCommentTimestamp)
     ) {
       // do nothing, test passed
       return
@@ -194,7 +196,7 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
     throw Error(`should not exclude comment cid`)
   }
 
-  const testExclude = async (exclude) => {
+  const validateExclude = async (exclude) => {
     let {addresses, maxCommentCids} = exclude?.subplebbit || {}
     if (!maxCommentCids) {
       maxCommentCids = 3
@@ -212,21 +214,21 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
     }
 
     // fetch and test all comments of the author async
-    const testCommentPromises = []
+    const validateCommentPromises = []
     let i = 0
     while (i < maxCommentCids) {
       const commentCid = commentCids[i++]
       if (commentCid) {
-        testCommentPromises.push(testComment(commentCid, addressesSet, exclude))
+        validateCommentPromises.push(validateComment(commentCid, addressesSet, exclude))
       }
     }
 
     // if doesn't throw, at least 1 test comment promise passed
     try {
-      await Promise.any(testCommentPromises)
+      await Promise.any(validateCommentPromises)
     }
     catch (e) {
-      // console.log(testCommentPromises)
+      // console.log(validateCommentPromises)
       e.message = `should not exclude: ${e.message}`
       throw Error(e)
     }
@@ -235,18 +237,18 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
   }
 
   // iterate over all excludes, and test them async
-  const testExcludePromise = []
+  const validateExcludePromise = []
   for (const exclude of subplebbitChallenge.exclude || []) {
-    testExcludePromise.push(testExclude(exclude))
+    validateExcludePromise.push(validateExclude(exclude))
   }
 
   // if at least 1 test passed, should exclude
   try {
-    await Promise.any(testExcludePromise)
+    await Promise.any(validateExcludePromise)
     return true
   }
   catch (e) {
-    // console.log(testExcludePromise)
+    // console.log(validateExcludePromise)
   }
 
   // if no exlucde test passed. should not exclude

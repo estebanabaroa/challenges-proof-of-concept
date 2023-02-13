@@ -5,12 +5,13 @@ const {EventEmitter} = require('events')
 class Comment extends EventEmitter {
   constructor(cid) {
     super()
-    const [subplebbitAddress,karma] = cid.replace('Qm...', '').split(',')
+    const [subplebbitAddress,karma,age] = cid.replace('Qm...', '').split(',')
     this.subplebbitAddress = subplebbitAddress
     this.ipnsName = 'ipns name ' + cid
 
     // use this value to mock giving 'high' or 'low' karma to the author
     this.karma = karma
+    this.age = age
   }
   async update() {
     setTimeout(() => {
@@ -19,7 +20,6 @@ class Comment extends EventEmitter {
           subplebbit: {
             postScore: 1000,
             replyScore: 1000,
-            firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*999 // 999 days ago
           }
         }
       }
@@ -28,9 +28,14 @@ class Comment extends EventEmitter {
           subplebbit: {
             postScore: 1,
             replyScore: 1,
-            firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*1 // 1 day ago
           }
         }
+      }
+      if (this.age === 'old') {
+        this.author.subplebbit.firstCommentTimestamp = Math.round(Date.now() / 1000) - 60*60*24*999 // 999 days ago
+      }
+      else if (this.age === 'new') {
+        this.author.subplebbit.firstCommentTimestamp = Math.round(Date.now() / 1000) - 60*60*24*1 // 1 day ago
       }
       this.emit('update', this)
     }, 100).unref()
@@ -300,7 +305,7 @@ const subplebbitAuthors = {
 
 // define mock friendly sub comment cids
 const challengeCommentCids = {
-  [highKarmaAuthor.address]: ['Qm...friendly-sub.eth,high', 'Qm...friendly-sub.eth,high']
+  [highKarmaAuthor.address]: ['Qm...friendly-sub.eth,high,old', 'Qm...friendly-sub.eth,high,old']
 }
 
 const challengeAnswers = {

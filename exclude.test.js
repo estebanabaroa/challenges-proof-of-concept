@@ -1,4 +1,4 @@
-require('util').inspect.defaultOptions.depth = null
+// require('util').inspect.defaultOptions.depth = null
 
 const {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess} = require('./exclude')
 const {expect} = require('chai')
@@ -156,7 +156,7 @@ describe("shouldExcludeChallengeSuccess", () => {
   })
 })
 
-describe.only("shouldExcludeAuthorCommentCids", () => {
+describe("shouldExcludeAuthorCommentCids", () => {
   let plebbit
   before(async () => {
     plebbit = await Plebbit()
@@ -174,44 +174,90 @@ describe.only("shouldExcludeAuthorCommentCids", () => {
         }
       ]
     }
+    const commentCidsOld = ['Qm...friendly-sub.eth,high,old', 'Qm...friendly-sub.eth,high,old']
+    const commentCidsNew = ['Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high,new']
+    const commentCidsNoAuthorSubplebbit = ['Qm...friendly-sub.eth', 'Qm...friendly-sub.eth']
+    const commentCidsEmpty = []
+    const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high,old', 'Qm...wrong.eth,high,old']
+    const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high,old']
+
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNew, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+  })
+
+  it("firstCommentTimestamp and postScore", async () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {
+          subplebbit: {
+            addresses: ['friendly-sub.eth'],
+            postScore: 100,
+            firstCommentTimestamp: 60*60*24*100, // 100 days
+            maxCommentCids: 2
+          }
+        }
+      ]
+    }
     const commentCidsHighKarma = ['Qm...friendly-sub.eth,high', 'Qm...friendly-sub.eth,high']
-    const commentCidsLowKarma = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low']
+    const commentCidsHighKarmaOld = ['Qm...friendly-sub.eth,high,old', 'Qm...friendly-sub.eth,high']
+    const commentCidsHighKarmaNew = ['Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high']
+    const commentCidsLowKarmaOld = ['Qm...friendly-sub.eth,low,old', 'Qm...friendly-sub.eth,low,old']
+    const commentCidsNoAuthorSubplebbit = ['Qm...friendly-sub.eth', 'Qm...friendly-sub.eth']
+    const commentCidsEmpty = []
+    const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high', 'Qm...wrong.eth,high']
+    const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,high']
+
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+  })
+
+  it("firstCommentTimestamp or (postScore and replyScore)", async () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {
+          subplebbit: {
+            addresses: ['friendly-sub.eth'],
+            firstCommentTimestamp: 60*60*24*100, // 100 days
+            maxCommentCids: 2
+          }
+        },
+        {
+          subplebbit: {
+            addresses: ['friendly-sub.eth'],
+            replyScore: 100, postScore: 100,
+            maxCommentCids: 2
+          }
+        }
+      ]
+    }
+    const commentCidsHighKarma = ['Qm...friendly-sub.eth,high', 'Qm...friendly-sub.eth,high']
+    const commentCidsHighKarmaOld = ['Qm...friendly-sub.eth,high,old', 'Qm...friendly-sub.eth,high']
+    const commentCidsHighKarmaNew = ['Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high']
+    const commentCidsLowKarmaOld = ['Qm...friendly-sub.eth,low,old', 'Qm...friendly-sub.eth,low,old']
+    const commentCidsLowKarmaNew = ['Qm...friendly-sub.eth,low,new', 'Qm...friendly-sub.eth,low,new']
     const commentCidsNoAuthorSubplebbit = ['Qm...friendly-sub.eth', 'Qm...friendly-sub.eth']
     const commentCidsEmpty = []
     const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high', 'Qm...wrong.eth,high']
     const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,high']
 
     expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarma, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(true)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaNew, plebbit)).to.equal(false)
     expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
     expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
     expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
   })
-
-  // it("firstCommentTimestamp and postScore", () => {
-  //   const subplebbitChallenge = {
-  //     exclude: [
-  //       {
-  //         subplebbit: {
-  //           addresses: ['friendly-sub.eth'],
-  //           firstCommentTimestamp: 60*60*24*100, // 100 days
-  //           maxCommentCids: 2
-  //         }
-  //       }
-  //     ]
-  //   }
-  //   const commentCidsHighKarma = ['Qm...friendly-sub.eth,high', 'Qm...friendly-sub.eth,high']
-  //   const commentCidsLowKarma = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low']
-  //   const commentCidsNoAuthorSubplebbit = ['Qm...friendly-sub.eth', 'Qm...friendly-sub.eth']
-  //   const commentCidsEmpty = []
-  //   const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high', 'Qm...wrong.eth,high']
-  //   const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,high']
-
-  //   expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(true)
-  //   expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarma, plebbit)).to.equal(false)
-  //   expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
-  //   expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
-  //   expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
-  
-  // })
 })

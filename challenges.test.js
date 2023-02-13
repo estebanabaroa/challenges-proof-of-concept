@@ -45,7 +45,7 @@ describe("getChallengesResultAndPendingChallenges", () => {
 
         const challengeResult = await getChallengeResultOrPendingChallenges(challengeRequestMessage, subplebbit)
         const expectedChallengeResult = results[subplebbit.title][author.address]
-        console.log({challengeResult, expectedChallengeResult})
+        // console.log({challengeResult, expectedChallengeResult})
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)
