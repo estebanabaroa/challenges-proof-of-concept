@@ -7,8 +7,7 @@ const plebbitJsChallenges = {
   'captcha-canvas-v3': captchaCanvasV3
 }
 
-// const getPendingChallengesOrChallengeVerification
-const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, subplebbit) => {
+const getPendingChallengesOrChallengeVerification = async (challengeRequestMessage, subplebbit) => {
   if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
     throw Error(`getPendingChallengesOrChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
   }
@@ -139,6 +138,6 @@ function getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallen
 
 module.exports = {
   plebbitJsChallenges,
-  getChallengeResultOrPendingChallenges,
+  getPendingChallengesOrChallengeVerification,
   getSubplebbitChallengeFromSubplebbitChallengeSettings
 }
