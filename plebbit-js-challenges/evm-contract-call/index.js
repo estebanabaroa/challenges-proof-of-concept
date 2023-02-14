@@ -52,7 +52,8 @@ const verifyAuthorAddress = (publication, chainTicker) => {
     // return true
   }
   if (wallet?.signature) {
-    // validate if wallet.signature matches JSON {domainSeparator:"plebbit-author-wallet",authorAddress:"${authorAddress}"}
+    // validate if wallet.signature matches JSON {domainSeparator:"plebbit-author-wallet",authorAddress:"${authorAddress},{timestamp:${wallet.timestamp}"}
+    // cache the timestamp and validate that no one has used a more recently timestamp with the same wallet.address in the cache
     return true
   }
   return false

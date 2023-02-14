@@ -31,19 +31,25 @@ const validateChallengeFile = (challengeFile, challengeIndex, subplebbit) => {
   }
 }
 
-const validateChallengeOrChallengeResult = (challengeOrChallengeResult, challengeIndex, subplebbit) => {
+const validateChallengeResult = (challengeResult, challengeIndex, subplebbit) => {
   const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
   const error = `invalid challenge result from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`
+  if (typeof challengeResult?.success !== 'boolean') {
+    throw Error(error)
+  }
+}
+
+const validateChallengeOrChallengeResult = (challengeOrChallengeResult, challengeIndex, subplebbit) => {
   if (challengeOrChallengeResult?.success !== undefined) {
-    if (typeof challengeOrChallengeResult?.success !== 'boolean') {
-      throw Error(error)
-    }
+    validateChallengeResult(challengeOrChallengeResult, challengeIndex, subplebbit)
   }
   else if (
     typeof challengeOrChallengeResult?.challenge !== 'string' ||
     typeof challengeOrChallengeResult?.type !== 'string' ||
     typeof challengeOrChallengeResult?.verify !== 'function'
   ) {
+    const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
+    const error = `invalid getChallenge challenge response from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`
     throw Error(error)
   }
 }
@@ -154,10 +160,7 @@ const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, c
 
   // validate results
   for (const [i, challengeResult] of challengeResultsWithPendingIndexes.entries()) {
-    if (typeof challengeResult?.success !== 'boolean') {
-      const subplebbitChallengeSettings = subplebbit.settings.challenges[pendingChallenges[i].index]
-      throw Error(`invalid challenge result from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${pendingChallenges[i].index}`)
-    }
+    validateChallengeResult(challengeResult, pendingChallenges[i].index, subplebbit)
   }
 
   // when filtering only pending challenges, the original indexes get lost so restore them
@@ -240,15 +243,15 @@ const getSubplebbitChallengeFromSubplebbitChallengeSettings = (subplebbitChallen
     try {
       const ChallengeFileFactory = require(subplebbitChallengeSettings.path)
       if (typeof ChallengeFileFactory !== 'function') {
-        throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file factory export from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+        throw Error(`invalid challenge file factory exported`)
       }
       challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
       if (typeof challengeFile?.getChallenge !== 'function') {
-        throw Error(`invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+        throw Error(`invalid challenge file`)
       }
     }
     catch (e) {
-      e.message = `failed importing challenge with path '${subplebbitChallengeSettings.path}': ${e.message}`
+      e.message = `getSubplebbitChallengeFromSubplebbitChallengeSettings failed importing challenge with path '${subplebbitChallengeSettings.path}': ${e.message}`
       throw e
     }
   }
@@ -256,14 +259,14 @@ const getSubplebbitChallengeFromSubplebbitChallengeSettings = (subplebbitChallen
   else if (subplebbitChallengeSettings.name) {
     const ChallengeFileFactory = plebbitJsChallenges[subplebbitChallengeSettings.name]
     if (!ChallengeFileFactory) {
-      throw Error(`plebbit-js challenge with name '${subplebbitChallengeSettings.name}' doesn't exist`)
+      throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings plebbit-js challenge with name '${subplebbitChallengeSettings.name}' doesn't exist`)
     }
     if (typeof ChallengeFileFactory !== 'function') {
-      throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file factory export from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+      throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file factory exported from subplebbit challenge '${subplebbitChallengeSettings.name}'`)
     }
     challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
     if (typeof challengeFile?.getChallenge !== 'function') {
-      throw Error(`invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+      throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name}'`)
     }
   }
   const {challenge, type} = challengeFile
