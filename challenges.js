@@ -85,8 +85,8 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
       // do nothing
     }
     else {
-      // index and exclude are needed to exlude based on other challenge success in getChallengeVerification
-      pendingChallenges.push({...challengeResult, index: challengeIndex, exclude: subplebbitChallenge.exclude})
+      // index is needed to exlude based on other challenge success in getChallengeVerification
+      pendingChallenges.push({...challengeResult, index: challengeIndex})
     }
   }
 
@@ -116,7 +116,7 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
   }
 }
 
-const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, challengeAnswers) => {
+const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, challengeAnswers, subplebbit) => {
   const verifyChallengePromises = []
   for (const i in pendingChallenges) {
     verifyChallengePromises.push(pendingChallenges[i].verify(challengeAnswers[i]))
@@ -140,7 +140,7 @@ const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, c
     }
 
     // exclude based on other challenges successes
-    if (shouldExcludeChallengeSuccess(challengeResultToPendingChallenge[challengeIndex], challengeResults)) {
+    if (shouldExcludeChallengeSuccess(subplebbit.settings.challenges[challengeIndex], challengeResults)) {
       continue
     }
 
@@ -173,7 +173,7 @@ const getChallengeVerification = async (challengeRequest, subplebbit, getChallen
   else {
     const challenges = pendingChallenges.map(pendingChallenge => pendingChallenge.challenge)
     const challengeAnswers = await getChallengeAnswers(challenges)
-    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswers)
+    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswers, subplebbit)
   }
   return challengeVerification
 }

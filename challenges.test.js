@@ -66,100 +66,37 @@ describe("getPendingChallengesOrChallengeVerification", () => {
   }
 })
 
-describe("getChallengeVerificationFromChallengeAnswers", () => {
-  it("only 50% of challenges must succeed", async () => {
-    const author = {address: 'Qm...'}
-    const subplebbit = {
-      settings: {
-        challenges: [
-          // add random exlcuded challenges to tests
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          // exlcude if other math challenge succeeds
-          {name: 'text-math', exclude: [{challenges: [3]}]},
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          // exlcude if other math challenge succeeds
-          {name: 'text-math', exclude: [{challenges: [1]}]},
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          {name: 'question', options: {
-            question: 'What is the password?',
-            answer: 'password'
-          }}
-        ]
-      },
-      plebbit: await Plebbit()
-    }
-
-    const challengeRequestMessage = {
-      publication: {author},
-      // define mock challenge answers in challenge request
-      challengeAnswers: [undefined, undefined, undefined, undefined, undefined, 'password']
-    }
-
-    const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
-    expect(challengeResult.challengeSuccess).to.equal(undefined)
-    expect(challengeResult.challengeErrors).to.deep.equal(undefined)
-    expect(challengeResult.pendingChallenges?.length).to.equal(2)
-
-    const {pendingChallenges} = challengeResult
-    expect(pendingChallenges[0].index).to.equal(1)
-    expect(pendingChallenges[0].exclude).to.deep.equal([ { challenges: [ 3 ] } ])
-    expect(pendingChallenges[1].index).to.equal(3)
-    expect(pendingChallenges[1].exclude).to.deep.equal([ { challenges: [ 1 ] } ])
-
-    // fail only the first challenge, should still succeed
-    const challengeAnswersFail1 = [
-      'wrong', String(eval(pendingChallenges[1].challenge))
-    ]
-    let challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFail1)
-    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
-
-    // fail only the second challenge, should still succeed
-    const challengeAnswersFail2 = [
-      String(eval(pendingChallenges[0].challenge)), 'wrong'
-    ]
-    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFail2)
-    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
-
-    // fail both challenge, should fail
-    const challengeAnswersFailAll = [
-      'wrong', 'wrong'
-    ]
-    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFailAll)
-    expect(challengeVerification.challengeSuccess).to.equal(false)
-    expect(challengeVerification.challengeErrors[1]).to.equal('Wrong answer.')
-    expect(challengeVerification.challengeErrors[3]).to.equal('Wrong answer.')
-  })
-})
-
 describe("getChallengeVerification", () => {
+  const author = {address: 'Qm...'}
+  const subplebbit = {
+    settings: {
+      challenges: [
+        // add random exlcuded challenges to tests
+        {name: 'fail', exclude: [{address: [author.address]}]},
+        // exlcude if other math challenge succeeds
+        {name: 'text-math', exclude: [{challenges: [3]}]},
+        {name: 'fail', exclude: [{address: [author.address]}]},
+        // exlcude if other math challenge succeeds
+        {name: 'text-math', exclude: [{challenges: [1]}]},
+        {name: 'fail', exclude: [{address: [author.address]}]},
+        {name: 'question', options: {
+          question: 'What is the password?',
+          answer: 'password'
+        }}
+      ]
+    }
+  }
+  const challengeRequestMessage = {
+    publication: {author},
+    // define mock challenge answers in challenge request
+    challengeAnswers: [undefined, undefined, undefined, undefined, undefined, 'password']
+  }
+
+  before(async () => {
+    subplebbit.plebbit = await Plebbit()
+  })
+
   it("only 50% of challenges must succeed", async () => {
-    const author = {address: 'Qm...'}
-    const subplebbit = {
-      settings: {
-        challenges: [
-          // add random exlcuded challenges to tests
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          // exlcude if other math challenge succeeds
-          {name: 'text-math', exclude: [{challenges: [3]}]},
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          // exlcude if other math challenge succeeds
-          {name: 'text-math', exclude: [{challenges: [1]}]},
-          {name: 'fail', exclude: [{address: [author.address]}]},
-          {name: 'question', options: {
-            question: 'What is the password?',
-            answer: 'password'
-          }}
-        ]
-      },
-      plebbit: await Plebbit()
-    }
-
-    const challengeRequestMessage = {
-      publication: {author},
-      // define mock challenge answers in challenge request
-      challengeAnswers: [undefined, undefined, undefined, undefined, undefined, 'password']
-    }
-
     // fail the first challenge answer, should still succeed
     const getChallengeAnswersFail1 = (challenges) => {
       return ['wrong', String(eval(challenges[1]))]
@@ -189,6 +126,40 @@ describe("getChallengeVerification", () => {
     }
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, getChallengeAnswersSucceedAll)
     expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+  })
+
+  it("getChallengeVerificationFromChallengeAnswers", async () => {
+    const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
+    expect(challengeResult.challengeSuccess).to.equal(undefined)
+    expect(challengeResult.challengeErrors).to.deep.equal(undefined)
+    expect(challengeResult.pendingChallenges?.length).to.equal(2)
+
+    const {pendingChallenges} = challengeResult
+    expect(pendingChallenges[0].index).to.equal(1)
+    expect(pendingChallenges[1].index).to.equal(3)
+
+    // fail only the first challenge, should still succeed
+    const challengeAnswersFail1 = [
+      'wrong', String(eval(pendingChallenges[1].challenge))
+    ]
+    let challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFail1, subplebbit)
+    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+
+    // fail only the second challenge, should still succeed
+    const challengeAnswersFail2 = [
+      String(eval(pendingChallenges[0].challenge)), 'wrong'
+    ]
+    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFail2, subplebbit)
+    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+
+    // fail both challenge, should fail
+    const challengeAnswersFailAll = [
+      'wrong', 'wrong'
+    ]
+    challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswersFailAll, subplebbit)
+    expect(challengeVerification.challengeSuccess).to.equal(false)
+    expect(challengeVerification.challengeErrors[1]).to.equal('Wrong answer.')
+    expect(challengeVerification.challengeErrors[3]).to.equal('Wrong answer.')
   })
 })
 
