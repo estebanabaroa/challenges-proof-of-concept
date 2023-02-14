@@ -18,7 +18,7 @@ Subplebbit {
   }
 }
 
-// challenges types
+// public challenges types
 SubplebbitChallenge { // copy values from private subplebbit.settings and publish to subplebbit.challenges
   exclude?: Exclude[] // copied from subplebbit.settings.challenges.exclude
   description?: string // copied from subplebbit.settings.challenges.description
@@ -40,16 +40,23 @@ ChallengeFile { // the result of the function exported by the challenge file
   getChallenge: GetChallengeFunction
 }
 GetChallengeFunction {
-  (challenge: SubplebbitChallengeSettings, challengeRequest: ChallengeRequestMessage, challengeAnswer: ChallengeAnswerMessage): GetChallengeResult | ChallengeAndAnswer
+  (challenge: SubplebbitChallengeSettings, challengeRequest: ChallengeRequestMessage, challengeAnswer: ChallengeAnswerMessage): Challenge | ChallengeResult
 }
-ChallengeAndAnswer { // if the result of a challenge can't be optained by getChallenge(), return a challenge
+Challenge { // if the result of a challenge can't be optained by getChallenge(), return a challenge
   challenge: string // e.g. '2 + 2'
-  answer: string // e.g. '4'
+  verify: async (answer: string): ChallengeResult
   type: 'image' | 'text' | 'audio' | 'video' | 'html'
 }
-GetChallengeResult { // if the result of a challenge can be optained by getChallenge, return the result
+ChallengeResult { // if the result of a challenge can be optained by getChallenge, return the result
   success?: boolean
   error?: string // the reason why the challenge failed, add it to ChallengeVerificationMessage.errors
+}
+PendingChallenges extends Challenges {
+  index: number
+}
+ChallengeVerification {
+  challengeSuccess: boolean
+  challengeErrors: (string|undefined)[]
 }
 Exclude { // all conditions in Exclude are AND, for OR, use another Exclude item in the Exclude array
   subplebbit?: ExcludeSubplebbit // exclude if author karma (from challengeRequestMessage.challengeCommentCids) in another subplebbit is greater or equal

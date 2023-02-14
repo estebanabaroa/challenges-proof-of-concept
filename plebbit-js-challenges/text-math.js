@@ -63,8 +63,15 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
     throw Error(`invalid challenge difficulty '${difficulty}'`)
   }
 
-  const answer = String(eval(challenge))
-  return {challenge, answer, type}
+  const verify = async (_answer) => {
+    if (String(eval(challenge)) === _answer) {
+      return {success: true}
+    }
+    return {
+      success: false, error: 'Wrong answer.'
+    }
+  }
+  return {challenge, verify, type}
 }
 
 function ChallengeFileFactory (subplebbitChallengeSettings) {

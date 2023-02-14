@@ -55,8 +55,16 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
 
   const res = await createCaptcha(width, height, {captcha: setCaptchaOptions})
   const answer = res.text
+  const verify = async (_answer) => {
+    if (answer.toLowerCase() === _answer.toLowerCase().trim()) {
+      return {success: true}
+    }
+    return {
+      success: false, error: 'Wrong captcha.'
+    }
+  }
   const challenge = (await res.image).toString('base64')
-  return {challenge, answer, type}
+  return {challenge, verify, type}
 }
 
 function ChallengeFileFactory (subplebbitChallengeSettings) {

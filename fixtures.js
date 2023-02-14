@@ -354,30 +354,30 @@ const subplebbits = [
 const results = {
   [textMathChallegeSubplebbit.title]: {
     [highKarmaAuthor.address]: {
-      pendingChallenges: [ { challenge: '660 - 256', answer: '404', type: 'text' } ]
+      pendingChallenges: [ { challenge: '660 - 256', type: 'text' } ]
     },
     [lowKarmaAuthor.address]: {
-      pendingChallenges: [ { challenge: '69 * 63', answer: '4347', type: 'text' } ]
+      pendingChallenges: [ { challenge: '69 * 63', type: 'text' } ]
     }
   },
   [captchaAndMathChallegeSubplebbit.title]: {
     [highKarmaAuthor.address]: {
       pendingChallenges: [
-        { challenge: '...', answer: '...', type: 'image' },
-        { challenge: '94 + 25', answer: '119', type: 'text' }
+        { challenge: '...', type: 'image' },
+        { challenge: '94 + 25', type: 'text' }
       ]
     },
     [lowKarmaAuthor.address]: {
       pendingChallenges: [
-        { challenge: '...', answer: '...', type: 'image' },
-        { challenge: '99 - 90', answer: '9', type: 'text' }
+        { challenge: '...', type: 'image' },
+        { challenge: '99 - 90', type: 'text' }
       ]
     }
   },
   [excludeHighKarmaChallegeSubplebbit.title]: {
     [highKarmaAuthor.address]: { challengeSuccess: true },
     [lowKarmaAuthor.address]: {
-      pendingChallenges: [ { challenge: '82 * 45', answer: '3690', type: 'text' } ]
+      pendingChallenges: [ { challenge: '82 * 45', type: 'text' } ]
     }
   },
   [excludeAccountAgeChallegeSubplebbit.title]: {

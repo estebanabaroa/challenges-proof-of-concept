@@ -28,7 +28,20 @@ const testVote = (excludeVote, publication) => testIs(excludeVote, publication, 
 const testReply = (excludeReply, publication) => testIs(excludeReply, publication, isReply)
 const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
 
-function shouldExcludePublication(subplebbitChallenge, publication) {
+// keep track of the last
+const cooldownCache = new QuickLRU({maxSize: 10000})
+const addToCooldownCache = (publication) => {
+  let publicationType = 'post'
+  if (isVote(publication)) {
+    publicationType = 'vote'
+  }
+  else if (isReply(publication)) {
+    publicationType = 'reply'
+  }
+  cooldownCache.set(publicationType + publication.author.address, Math.round(Date.now()/ 1000))
+}
+
+const shouldExcludePublication = (subplebbitChallenge, publication) => {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
     throw Error(`shouldExcludePublication invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
@@ -88,7 +101,7 @@ function shouldExcludePublication(subplebbitChallenge, publication) {
   return false
 }
 
-function shouldExcludeChallengeSuccess(subplebbitChallenge, challengeResults) {
+const shouldExcludeChallengeSuccess = (subplebbitChallenge, challengeResults) => {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
     throw Error(`shouldExcludeChallengeSuccess invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
@@ -288,4 +301,4 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, commentCid
   return false
 }
 
-module.exports = {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess}
+module.exports = {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess, addToCooldownCache}
