@@ -8,13 +8,34 @@ const testScore = (excludeScore, authorScore) => excludeScore === undefined || e
 // firstCommentTimestamp value first needs to be put through Date.now() - firstCommentTimestamp
 const testFirstCommentTimestamp = (excludeTime, authorFirstCommentTimestamp) => excludeTime === undefined || getTimestampSecondsAgo(excludeTime) >= (authorFirstCommentTimestamp || Infinity)
 
-function shouldExcludeAuthor(subplebbitChallenge, author) {
+const isVote = (publication) => publication.vote !== undefined && publication.commentCid
+const isReply = (publication) => publication.parentCid && !publication.commentCid
+const isPost = (publication) => !publication.parentCid && !publication.commentCid
+const testIs = (excludePublicationType, publication, isFunction) => {
+  if (excludePublicationType === undefined) return true
+  if (excludePublicationType === true) {
+    if (isFunction(publication)) return true
+    else return false
+  }
+  if (excludePublicationType === false) {
+    if (isFunction(publication)) return false
+    else return true
+  }
+  // excludePublicationType is invalid, return true
+  return true
+}
+const testVote = (excludeVote, publication) => testIs(excludeVote, publication, isVote)
+const testReply = (excludeReply, publication) => testIs(excludeReply, publication, isReply)
+const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
+
+function shouldExcludePublication(subplebbitChallenge, publication) {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
-    throw Error(`shouldExcludeAuthor invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
+    throw Error(`shouldExcludePublication invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
-  if (author && typeof author !== 'object') {
-    throw Error(`shouldExcludeAuthor invalid author argument '${author}'`)
+  if (!publication?.author || typeof publication?.author !== 'object') {
+    throw Error(`shouldExcludePublication invalid publication argument '${publication}'`)
   }
+  const author = publication.author
 
   if (!subplebbitChallenge.exclude) {
     return false
@@ -27,7 +48,10 @@ function shouldExcludeAuthor(subplebbitChallenge, author) {
       !exclude.postScore &&
       !exclude.replyScore &&
       !exclude.firstCommentTimestamp &&
-      !exclude.address?.length
+      !exclude.address?.length &&
+      exclude.post === undefined &&
+      exclude.reply === undefined &&
+      exclude.vote === undefined
     ) {
       continue
     }
@@ -41,6 +65,15 @@ function shouldExcludeAuthor(subplebbitChallenge, author) {
       shouldExclude = false
     }
     if (!testFirstCommentTimestamp(exclude.firstCommentTimestamp, author.subplebbit?.firstCommentTimestamp)) {
+      shouldExclude = false
+    }
+    if (!testPost(exclude.post, publication)) {
+      shouldExclude = false
+    }
+    if (!testReply(exclude.reply, publication)) {
+      shouldExclude = false
+    }
+    if (!testVote(exclude.vote, publication)) {
       shouldExclude = false
     }
     if (exclude.address && !exclude.address.includes(author.address)) {
@@ -104,15 +137,15 @@ const commentUpdateCache = new TinyCache()
 const commentUpdateCacheTime = 1000 * 60 * 60
 const getCommentPending = {}
 
-const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, plebbit) => {
+const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, commentCids, plebbit) => {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
-    throw Error(`shouldExcludeAuthorCommentCids invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
+    throw Error(`shouldExcludeChallengeCommentCids invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
   if (commentCids && !Array.isArray(commentCids)) {
-    throw Error(`shouldExcludeAuthorCommentCids invalid commentCids argument '${commentCids}'`)
+    throw Error(`shouldExcludeChallengeCommentCids invalid commentCids argument '${commentCids}'`)
   }
   if (typeof plebbit?.getComment !== 'function') {
-    throw Error(`shouldExcludeAuthorCommentCids invalid plebbit argument '${plebbit}'`)
+    throw Error(`shouldExcludeChallengeCommentCids invalid plebbit argument '${plebbit}'`)
   }
 
   const _getComment = async (commentCid, addressesSet) => {
@@ -255,4 +288,4 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
   return false
 }
 
-module.exports = {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess}
+module.exports = {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess}

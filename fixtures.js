@@ -289,6 +289,29 @@ const twoOutOf4SuccessInverseChallegeSubplebbit = {
     ]
   }
 }
+const cooldownChallegeSubplebbit = {
+  title: 'cooldown challenge subplebbit',
+  settings: {
+    challenges: [
+      {
+        name: 'text-math',
+      },
+      {
+        name: 'fail',
+        options: {
+          error: `You're doing this too much, there's a cooldown: 30 minutes post, 15 minutes reply, 1 minute vote.`
+        },
+        // different cooldown per publication type, no cooldown for mods
+        exclude: [
+          {post: true, cooldown: 60*30},
+          {reply: true, cooldown: 60*15},
+          {vote: true, cooldown: 60*1},
+          {role: ['admin', 'moderator']}
+        ]
+      },
+    ]
+  }
+}
 
 // define mock author karma scores and account age
 const subplebbitAuthors = {

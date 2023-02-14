@@ -1,28 +1,28 @@
 // require('util').inspect.defaultOptions.depth = null
 
-const {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess} = require('./exclude')
+const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess} = require('./exclude')
 const {expect} = require('chai')
 const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids, results} = require('./fixtures')
 
-describe("shouldExcludeAuthor", () => {
+describe("shouldExcludePublication", () => {
   it("firstCommentTimestamp", () => {
     const subplebbitChallenge = {
       exclude: [
         {firstCommentTimestamp: 60*60*24*100} // 100 days
       ]
     }
-    const oldAuthor = {
+    const oldAuthor = {author: {
       subplebbit: {
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*101 // 101 days
       }
-    }
-    const newAuthor = {
+    }}
+    const newAuthor = {author: {
       subplebbit: {
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*99 // 99 days
       }
-    }
-    expect(shouldExcludeAuthor(subplebbitChallenge, oldAuthor)).to.equal(true)
-    expect(shouldExcludeAuthor(subplebbitChallenge, newAuthor)).to.equal(false)
+    }}
+    expect(shouldExcludePublication(subplebbitChallenge, oldAuthor)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, newAuthor)).to.equal(false)
   })
 
   it("firstCommentTimestamp and postScore", () => {
@@ -34,20 +34,20 @@ describe("shouldExcludeAuthor", () => {
         }
       ]
     }
-    const oldAuthor = {
+    const oldAuthor = {author: {
       subplebbit: {
         postScore: 100,
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*101 // 101 days
       }
-    }
-    const newAuthor = {
+    }}
+    const newAuthor = {author: {
       subplebbit: {
         postScore: 99,
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*101 // 101 days
       }
-    }
-    expect(shouldExcludeAuthor(subplebbitChallenge, oldAuthor)).to.equal(true)
-    expect(shouldExcludeAuthor(subplebbitChallenge, newAuthor)).to.equal(false)
+    }}
+    expect(shouldExcludePublication(subplebbitChallenge, oldAuthor)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, newAuthor)).to.equal(false)
   })
 
   it("firstCommentTimestamp or (postScore and replyScore)", () => {
@@ -57,25 +57,77 @@ describe("shouldExcludeAuthor", () => {
         {firstCommentTimestamp: 60*60*24*100} // 100 days
       ]
     }
-    const oldAuthor = {
+    const oldAuthor = {author: {
       subplebbit: {
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*101 // 101 days
       }
-    }
-    const newAuthor = {
+    }}
+    const newAuthor = {author: {
       subplebbit: {
         postScore: 101,
         firstCommentTimestamp: Math.round(Date.now() / 1000) - 60*60*24*99 // 99 days
       }
-    }
-    const popularAuthor = {
+    }}
+    const popularAuthor = {author: {
       subplebbit: {
         postScore: 100, replyScore: 100
       }  
+    }}
+    expect(shouldExcludePublication(subplebbitChallenge, oldAuthor)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, newAuthor)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, popularAuthor)).to.equal(true)
+  })
+
+  const author = {address: 'Qm...'}
+  const post = {
+    content: 'content',
+    author
+  }
+  const reply = {
+    content: 'content',
+    parentCid: 'Qm...',
+    author
+  }
+  const vote = {
+    commentCid: 'Qm...',
+    vote: 0,
+    author
+  }
+
+  it("post", () => {
+    const subplebbitChallenge = {
+      exclude: [{post: true}]
     }
-    expect(shouldExcludeAuthor(subplebbitChallenge, oldAuthor)).to.equal(true)
-    expect(shouldExcludeAuthor(subplebbitChallenge, newAuthor)).to.equal(false)
-    expect(shouldExcludeAuthor(subplebbitChallenge, popularAuthor)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, post)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, reply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, vote)).to.equal(false)
+  })
+
+  it("reply", () => {
+    const subplebbitChallenge = {
+      exclude: [{reply: true}]
+    }
+    expect(shouldExcludePublication(subplebbitChallenge, post)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, reply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, vote)).to.equal(false)
+  })
+
+  it("vote", () => {
+    const subplebbitChallenge = {
+      exclude: [{vote: true}]
+    }
+    expect(shouldExcludePublication(subplebbitChallenge, post)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, reply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, vote)).to.equal(true)
+  })
+
+  it("vote and reply", () => {
+    const subplebbitChallenge = {
+      exclude: [{vote: true, reply: true}]
+    }
+    expect(shouldExcludePublication(subplebbitChallenge, post)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, reply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, vote)).to.equal(false)
   })
 })
 
@@ -156,7 +208,7 @@ describe("shouldExcludeChallengeSuccess", () => {
   })
 })
 
-describe("shouldExcludeAuthorCommentCids", () => {
+describe("shouldExcludeChallengeCommentCids", () => {
   let plebbit
   before(async () => {
     plebbit = await Plebbit()
@@ -181,12 +233,12 @@ describe("shouldExcludeAuthorCommentCids", () => {
     const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high,old', 'Qm...wrong.eth,high,old']
     const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high,new', 'Qm...friendly-sub.eth,high,old']
 
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsOld, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNew, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsNew, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
   })
 
   it("firstCommentTimestamp and postScore", async () => {
@@ -211,14 +263,14 @@ describe("shouldExcludeAuthorCommentCids", () => {
     const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high', 'Qm...wrong.eth,high']
     const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,high']
 
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
   })
 
   it("firstCommentTimestamp or (postScore and replyScore)", async () => {
@@ -250,14 +302,14 @@ describe("shouldExcludeAuthorCommentCids", () => {
     const commentCidsWrongSubplebbitAddress = ['Qm...wrong.eth,high', 'Qm...wrong.eth,high']
     const commentCidsMoreThanMax = ['Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,low', 'Qm...friendly-sub.eth,high']
 
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(true)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsLowKarmaNew, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
-    expect(await shouldExcludeAuthorCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarma, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsHighKarmaNew, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsLowKarmaOld, plebbit)).to.equal(true)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsLowKarmaNew, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsNoAuthorSubplebbit, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
+    expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
   })
 })

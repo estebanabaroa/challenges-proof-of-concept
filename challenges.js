@@ -1,4 +1,4 @@
-const {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess} = require('./exclude')
+const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess} = require('./exclude')
 
 // all challenges included with plebbit-js, in Plebbit.challenges
 const textMath = require('./plebbit-js-challenges/text-math')
@@ -17,8 +17,7 @@ const plebbitJsChallenges = {
   'evm-contract-call': evmContractCall
 }
 
-// const getPendingChallengesOrChallengeVerification
-const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, subplebbit) => {
+const getPendingChallengesOrChallengeVerification = async (challengeRequestMessage, subplebbit) => {
   if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
     throw Error(`getPendingChallengesOrChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
   }
@@ -66,10 +65,10 @@ const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, su
     const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallengeSettings)
 
     // exclude author from challenge based on the subplebbit minimum karma settings
-    if (shouldExcludeAuthor(subplebbitChallenge, challengeRequestMessage.publication.author)) {
+    if (shouldExcludePublication(subplebbitChallenge, challengeRequestMessage.publication)) {
       continue
     }
-    if (await shouldExcludeAuthorCommentCids(subplebbitChallenge, challengeRequestMessage.challengeCommentCids, subplebbit.plebbit)) {
+    if (await shouldExcludeChallengeCommentCids(subplebbitChallenge, challengeRequestMessage.challengeCommentCids, subplebbit.plebbit)) {
       continue
     }
 
@@ -149,6 +148,6 @@ function getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallen
 
 module.exports = {
   plebbitJsChallenges,
-  getChallengeResultOrPendingChallenges,
+  getPendingChallengesOrChallengeVerification,
   getSubplebbitChallengeFromSubplebbitChallengeSettings
 }
