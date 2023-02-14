@@ -38,15 +38,15 @@ const listChallengesOfSubplebbit = (subplebbit) => {
   return challenges
 }
 
-// for (const subplebbit of subplebbits) {
-//   console.log('--', subplebbit.title)
-//   for (const subplebbitChallengeSettings of subplebbit.settings.challenges) {
-//     console.log('')
-//     console.log('----', 'display name:', getChallengeSettingsDisplayName(subplebbitChallengeSettings))
-//     console.log(subplebbitChallengeSettings)
-//   }
-//   console.log('')
-// }
+for (const subplebbit of subplebbits) {
+  console.log('--', subplebbit.title)
+  for (const subplebbitChallengeSettings of subplebbit.settings.challenges) {
+    console.log('')
+    console.log('----', 'display name:', getChallengeSettingsDisplayName(subplebbitChallengeSettings))
+    console.log(subplebbitChallengeSettings)
+  }
+  console.log('')
+}
 
 // the UI can use this function to list a dropdown selection of available subplebbit challenges
 console.log(listAvailableSubplebbitChallengesSettings())

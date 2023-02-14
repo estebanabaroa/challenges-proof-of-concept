@@ -17,6 +17,20 @@ const plebbitJsChallenges = {
   'evm-contract-call': evmContractCall
 }
 
+const validateChallengeFileFactory = (challengeFileFactory, challengeIndex, subplebbit) => {
+  const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
+  if (typeof challengeFileFactory !== 'function') {
+    throw Error(`invalid challenge file factory export from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`)
+  }
+}
+
+const validateChallengeFile = (challengeFile, challengeIndex, subplebbit) => {
+  const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
+  if (typeof challengeFile?.getChallenge !== 'function') {
+    throw Error(`invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`)
+  }
+}
+
 const validateChallengeOrChallengeResult = (challengeOrChallengeResult, challengeIndex, subplebbit) => {
   const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
   const error = `invalid challenge result from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`
@@ -44,7 +58,9 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
     if (subplebbitChallengeSettings.path) {
       try {
         const ChallengeFileFactory = require(subplebbitChallengeSettings.path)
+        validateChallengeFileFactory(ChallengeFileFactory, challengeIndex, subplebbit)
         challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
+        validateChallengeFile(challengeFile, challengeIndex, subplebbit)
       }
       catch (e) {
         e.message = `failed importing challenge with path '${subplebbitChallengeSettings.path}': ${e.message}`
@@ -57,7 +73,9 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
       if (!ChallengeFileFactory) {
         throw Error(`plebbit-js challenge with name '${subplebbitChallengeSettings.name}' doesn't exist`)
       }
+      validateChallengeFileFactory(ChallengeFileFactory, challengeIndex, subplebbit)
       challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
+      validateChallengeFile(challengeFile, challengeIndex, subplebbit)
     }
 
     // we don't have the challenge answer message yet
@@ -221,7 +239,13 @@ const getSubplebbitChallengeFromSubplebbitChallengeSettings = (subplebbitChallen
   if (subplebbitChallengeSettings.path) {
     try {
       const ChallengeFileFactory = require(subplebbitChallengeSettings.path)
+      if (typeof ChallengeFileFactory !== 'function') {
+        throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file factory export from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+      }
       challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
+      if (typeof challengeFile?.getChallenge !== 'function') {
+        throw Error(`invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+      }
     }
     catch (e) {
       e.message = `failed importing challenge with path '${subplebbitChallengeSettings.path}': ${e.message}`
@@ -234,7 +258,13 @@ const getSubplebbitChallengeFromSubplebbitChallengeSettings = (subplebbitChallen
     if (!ChallengeFileFactory) {
       throw Error(`plebbit-js challenge with name '${subplebbitChallengeSettings.name}' doesn't exist`)
     }
+    if (typeof ChallengeFileFactory !== 'function') {
+      throw Error(`getSubplebbitChallengeFromSubplebbitChallengeSettings invalid challenge file factory export from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+    }
     challengeFile = ChallengeFileFactory(subplebbitChallengeSettings)
+    if (typeof challengeFile?.getChallenge !== 'function') {
+      throw Error(`invalid challenge file from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}'`)
+    }
   }
   const {challenge, type} = challengeFile
   const {exclude, description} = subplebbitChallengeSettings
