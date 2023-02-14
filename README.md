@@ -51,13 +51,6 @@ ChallengeResult { // if the result of a challenge can be optained by getChalleng
   success?: boolean
   error?: string // the reason why the challenge failed, add it to ChallengeVerificationMessage.errors
 }
-PendingChallenges extends Challenges {
-  index: number
-}
-ChallengeVerification {
-  challengeSuccess: boolean
-  challengeErrors: (string|undefined)[]
-}
 Exclude { // all conditions in Exclude are AND, for OR, use another Exclude item in the Exclude array
   subplebbit?: ExcludeSubplebbit // exclude if author karma (from challengeRequestMessage.challengeCommentCids) in another subplebbit is greater or equal
   postScore?: number // exclude if author post score is greater or equal
