@@ -28,7 +28,7 @@ const testVote = (excludeVote, publication) => testIs(excludeVote, publication, 
 const testReply = (excludeReply, publication) => testIs(excludeReply, publication, isReply)
 const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
 
-// keep track of the last
+// keep track of the last time
 const cooldownCache = new QuickLRU({maxSize: 10000})
 const addToCooldownCache = (publication) => {
   let publicationType = 'post'
@@ -150,15 +150,23 @@ const commentUpdateCache = new TinyCache()
 const commentUpdateCacheTime = 1000 * 60 * 60
 const getCommentPending = {}
 
-const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, commentCids, plebbit) => {
+const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeRequestMessage, plebbit) => {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
     throw Error(`shouldExcludeChallengeCommentCids invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
-  if (commentCids && !Array.isArray(commentCids)) {
-    throw Error(`shouldExcludeChallengeCommentCids invalid commentCids argument '${commentCids}'`)
+  if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
+    throw Error(`shouldExcludeChallengeCommentCids invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
   }
   if (typeof plebbit?.getComment !== 'function') {
     throw Error(`shouldExcludeChallengeCommentCids invalid plebbit argument '${plebbit}'`)
+  }
+  const commentCids = challengeRequestMessage.challengeCommentCids
+  const author = challengeRequestMessage.publication?.author
+  if (commentCids && !Array.isArray(commentCids)) {
+    throw Error(`shouldExcludeChallengeCommentCids invalid commentCids argument '${commentCids}'`)
+  }
+  if (!author?.address || typeof author?.address !== 'string') {
+    throw Error(`shouldExcludeChallengeCommentCids invalid challengeRequestMessage.publication.author.address argument '${author?.address}'`)
   }
 
   const _getComment = async (commentCid, addressesSet) => {
@@ -170,7 +178,8 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, commentCid
     if (!cachedComment) {
       comment = await plebbit.getComment(commentCid)
       // only cache useful values
-      cachedComment = {ipnsName: comment.ipnsName || invalidIpnsName, subplebbitAddress: comment.subplebbitAddress}
+      const author = {address: comment?.author?.address}
+      cachedComment = {ipnsName: comment.ipnsName || invalidIpnsName, subplebbitAddress: comment.subplebbitAddress, author}
       commentCache.set(commentCid, cachedComment)
     }
 
@@ -182,6 +191,12 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, commentCid
     // subplebbit address doesn't match filter
     if (!addressesSet.has(cachedComment.subplebbitAddress)) {
       throw Error(`comment doesn't have subplebbit address`)
+    }
+
+    // author address doesn't match author
+    if (cachedComment?.author?.address !== author.address) {
+      console.log({cachedComment, author})
+      throw Error(`comment author address doesn't match publication author address`)
     }
 
     // comment hasn't been updated yet

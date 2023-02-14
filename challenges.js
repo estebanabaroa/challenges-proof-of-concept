@@ -103,7 +103,7 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
     if (shouldExcludePublication(subplebbitChallenge, challengeRequestMessage.publication)) {
       continue
     }
-    if (await shouldExcludeChallengeCommentCids(subplebbitChallenge, challengeRequestMessage.challengeCommentCids, subplebbit.plebbit)) {
+    if (await shouldExcludeChallengeCommentCids(subplebbitChallenge, challengeRequestMessage, subplebbit.plebbit)) {
       continue
     }
 

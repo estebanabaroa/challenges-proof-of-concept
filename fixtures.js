@@ -2,6 +2,17 @@ const path = require('path')
 const {EventEmitter} = require('events')
 const {plebbitJsChallenges} = require('./challenges')
 
+// define mock Author instances
+const highKarmaAuthor = {
+  address: 'high-karma.eth',
+  wallets: {eth: {address: '0x...', signature: '0x...'}}
+}
+const lowKarmaAuthor = {address: 'low-karma.eth'}
+const authors = [
+  highKarmaAuthor, 
+  lowKarmaAuthor
+]
+
 // mock comment instance
 class Comment extends EventEmitter {
   constructor(cid) {
@@ -10,6 +21,15 @@ class Comment extends EventEmitter {
     this.subplebbitAddress = subplebbitAddress
     this.ipnsName = 'ipns name ' + cid
 
+    // define author
+    this.author = {address: 'Qm...'}
+    if (karma === 'high') {
+      this.author.address = highKarmaAuthor.address
+    }
+    else if (karma === 'low') {
+      this.author.address = lowKarmaAuthor.address
+    }
+
     // use this value to mock giving 'high' or 'low' karma to the author
     this.karma = karma
     this.age = age
@@ -17,19 +37,15 @@ class Comment extends EventEmitter {
   async update() {
     setTimeout(() => {
       if (this.karma === 'high') {
-        this.author = {
-          subplebbit: {
-            postScore: 1000,
-            replyScore: 1000,
-          }
+        this.author.subplebbit = {
+          postScore: 1000,
+          replyScore: 1000,
         }
       }
       else if (this.karma === 'low') {
-        this.author = {
-          subplebbit: {
-            postScore: 1,
-            replyScore: 1,
-          }
+        this.author.subplebbit = {
+          postScore: 1,
+          replyScore: 1,
         }
       }
       if (this.age === 'old') {
@@ -58,17 +74,6 @@ const Plebbit = async () => createPlebbit()
 
 // define mock challenges included with plebbit-js
 Plebbit.challenges = plebbitJsChallenges
-
-// define mock Author instances
-const highKarmaAuthor = {
-  address: 'high-karma.eth',
-  wallets: {eth: {address: '0x...', signature: '0x...'}}
-}
-const lowKarmaAuthor = {address: 'low-karma.eth'}
-const authors = [
-  highKarmaAuthor, 
-  lowKarmaAuthor
-]
 
 // define mock Subplebbit instances
 const textMathChallegeSubplebbit = {
