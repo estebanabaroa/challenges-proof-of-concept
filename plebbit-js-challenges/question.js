@@ -10,6 +10,8 @@ const optionInputs = [
 
 const type = 'text'
 
+const description = `Ask a question, like 'What is the password?'`
+
 const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
   let answer = subplebbitChallengeSettings?.options?.answer
   if (!answer) {
@@ -37,7 +39,7 @@ function ChallengeFileFactory (subplebbitChallengeSettings) {
   const question = subplebbitChallengeSettings?.options?.question
   const challenge = question
 
-  return {getChallenge, optionInputs, type, challenge}
+  return {getChallenge, optionInputs, type, challenge, description}
 }
 
 module.exports = ChallengeFileFactory

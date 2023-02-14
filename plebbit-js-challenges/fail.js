@@ -12,6 +12,8 @@ const optionInputs = [
 
 const type = 'text'
 
+const description = 'A challenge that automatically fails with a custom error message.'
+
 const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
   // add a custom error message to display to the author
   const error = subplebbitChallengeSettings?.options?.error
@@ -24,7 +26,7 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
 }
 
 function ChallengeFileFactory (subplebbitChallengeSettings) {
-  return {getChallenge, optionInputs, type}
+  return {getChallenge, optionInputs, type, description}
 }
 
 module.exports = ChallengeFileFactory

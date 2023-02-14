@@ -36,6 +36,8 @@ const optionInputs = [
   },
 ]
 
+const description = 'The response from an EVM contract call passes a condition, e.g. a token balance challenge.'
+
 const verifyAuthorAddress = (publication, chainTicker) => {
   const authorAddress = publication.author.wallets?.[chainTicker]?.address
   const wallet = publication.author.wallets?.[chainTicker]
@@ -134,11 +136,9 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
 
 function ChallengeFileFactory (subplebbitChallengeSettings) {
   let {chainTicker} = subplebbitChallengeSettings?.options || {}
-  if (!chainTicker) {
-    throw Error('missing option chainTicker')
-  }
-  const type = 'chain/' + chainTicker
-  return {getChallenge, optionInputs, type}
+
+  const type = 'chain/' + (chainTicker || '<chainTicker>')
+  return {getChallenge, optionInputs, type, description}
 }
 
 module.exports = ChallengeFileFactory

@@ -1,13 +1,24 @@
-const textMath = require('./plebbit-js-challenges/text-math')
-const captchaCanvasV3 = require('./plebbit-js-challenges/text-math')
 const {shouldExcludeAuthorCommentCids, shouldExcludeAuthor, shouldExcludeChallengeSuccess} = require('./exclude')
+
+// all challenges included with plebbit-js, in Plebbit.challenges
+const textMath = require('./plebbit-js-challenges/text-math')
+const captchaCanvasV3 = require('./plebbit-js-challenges/captcha-canvas-v3')
+const fail = require('./plebbit-js-challenges/fail')
+const blacklist = require('./plebbit-js-challenges/blacklist')
+const question = require('./plebbit-js-challenges/question')
+const evmContractCall = require('./plebbit-js-challenges/evm-contract-call')
 
 const plebbitJsChallenges = {
   'text-math': textMath,
-  'captcha-canvas-v3': captchaCanvasV3
+  'captcha-canvas-v3': captchaCanvasV3,
+  'fail': fail,
+  'blacklist': blacklist,
+  'question': question,
+  'evm-contract-call': evmContractCall
 }
 
-const getPendingChallengesOrChallengeVerification = async (challengeRequestMessage, subplebbit) => {
+// const getPendingChallengesOrChallengeVerification
+const getChallengeResultOrPendingChallenges = async (challengeRequestMessage, subplebbit) => {
   if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
     throw Error(`getPendingChallengesOrChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
   }
@@ -138,6 +149,6 @@ function getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallen
 
 module.exports = {
   plebbitJsChallenges,
-  getPendingChallengesOrChallengeVerification,
+  getChallengeResultOrPendingChallenges,
   getSubplebbitChallengeFromSubplebbitChallengeSettings
 }

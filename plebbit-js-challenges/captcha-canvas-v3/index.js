@@ -55,7 +55,7 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
 
   const res = await createCaptcha(width, height, {captcha: setCaptchaOptions})
   const answer = res.text
-  const challenge = (await res.image).toString('base64').substring(0, 50) + '...' // trim for demo
+  const challenge = (await res.image).toString('base64')
   return {challenge, answer, type}
 }
 

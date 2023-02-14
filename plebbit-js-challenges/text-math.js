@@ -20,6 +20,8 @@ const optionInputs = [
 
 const type = 'text'
 
+const description = 'Ask a plain text math question, insecure, use ONLY for testing.'
+
 const getRandomNumber = (minNumber, maxNumber) => Math.floor(Math.random() * (maxNumber - minNumber + 1) + minNumber)
 
 const getChallengeString = (minNumber, maxNumber, operators) => {
@@ -66,7 +68,7 @@ const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage
 }
 
 function ChallengeFileFactory (subplebbitChallengeSettings) {
-  return {getChallenge, optionInputs, type}
+  return {getChallenge, optionInputs, type, description}
 }
 
 module.exports = ChallengeFileFactory

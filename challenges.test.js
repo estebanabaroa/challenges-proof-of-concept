@@ -1,6 +1,6 @@
 // require('util').inspect.defaultOptions.depth = null
 
-const {getPendingChallengesOrChallengeVerification, plebbitJsChallenges, getSubplebbitChallengeFromSubplebbitChallengeSettings} = require('./challenges')
+const {getChallengeResultOrPendingChallenges, plebbitJsChallenges, getSubplebbitChallengeFromSubplebbitChallengeSettings} = require('./challenges')
 const {expect} = require('chai')
 const {subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids, results} = require('./fixtures')
 
@@ -43,9 +43,9 @@ describe("getChallengesResultAndPendingChallenges", () => {
           challengeAnswers: challengeAnswers[author.address]?.[subplebbit.title]
         }
 
-        const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
+        const challengeResult = await getChallengeResultOrPendingChallenges(challengeRequestMessage, subplebbit)
         const expectedChallengeResult = results[subplebbit.title][author.address]
-        // console.log({challengeResult, expectedChallengeResult})
+        console.log({challengeResult, expectedChallengeResult})
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)

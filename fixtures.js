@@ -1,5 +1,6 @@
 const path = require('path')
 const {EventEmitter} = require('events')
+const {plebbitJsChallenges} = require('./challenges')
 
 // mock comment instance
 class Comment extends EventEmitter {
@@ -55,11 +56,8 @@ const createPlebbit = () => {
 // mock Plebbit async
 const Plebbit = async () => createPlebbit()
 
-// mock the challenges included in plebbit-js
-Plebbit.challenges = {
-  'text-math': require(path.join(__dirname, 'plebbit-js-challenges', 'text-math')),
-  'captcha-canvas-v3': require(path.join(__dirname, 'plebbit-js-challenges', 'captcha-canvas-v3'))
-}
+// define mock challenges included with plebbit-js
+Plebbit.challenges = plebbitJsChallenges
 
 // define mock Author instances
 const highKarmaAuthor = {
@@ -129,7 +127,7 @@ const excludeAccountAgeChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         // exclude if the author match any one item in the array
         exclude: [
           // exclude author with account age older than 100 days (Math.round(Date.now() / 1000)- 60*60*24*100)
@@ -145,7 +143,7 @@ const whitelistChallegeSubplebbit = {
     challenges: [
       {
         // the fail challenge always fails
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         options: {
           error: `You're not whitelisted.`
         },
@@ -162,7 +160,7 @@ const blacklistChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'blacklist'),
+        name: 'blacklist',
         options: {
           blacklist: 'low-karma.eth,some-author.eth',
         }
@@ -195,7 +193,7 @@ const evmContractCallChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'evm-contract-call'),
+        name: 'evm-contract-call',
         options: {
           chainTicker: 'eth',
           // contract address
@@ -215,7 +213,7 @@ const passwordChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'question'),
+        name: 'question',
         options: {
           question: 'What is the password?',
           answer: 'password',
@@ -229,7 +227,7 @@ const excludeFriendlySubKarmaChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         exclude: [
           // exclude author with karma in those subs using publication.challengeCommentCids
           {subplebbit: {
@@ -249,19 +247,19 @@ const twoOutOf4SuccessChallegeSubplebbit = {
     // challenge 0, 1 fail, but excluded if 2, 3 succeed, which makes challengeVerification.challengeSuccess = true
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         exclude: [{challenges: [2, 3]}]
       },
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         exclude: [{challenges: [2, 3]}]
       },
       {
-        path: path.join(__dirname, 'challenges', 'blacklist'),
+        name: 'blacklist',
         options: {blacklist: 'low-karma.eth,some-author.eth'}
       },
       {
-        path: path.join(__dirname, 'challenges', 'blacklist'),
+        name: 'blacklist',
         options: {blacklist: 'low-karma.eth,some-author.eth'}
       },
     ]
@@ -273,19 +271,19 @@ const twoOutOf4SuccessInverseChallegeSubplebbit = {
     // challenge 0, 1 fail, but excluded if 2, 3 succeed, which makes challengeVerification.challengeSuccess = true
     challenges: [
       {
-        path: path.join(__dirname, 'challenges', 'blacklist'),
+        name: 'blacklist',
         options: {blacklist: 'low-karma.eth,some-author.eth'}
       },
       {
-        path: path.join(__dirname, 'challenges', 'blacklist'),
+        name: 'blacklist',
         options: {blacklist: 'low-karma.eth,some-author.eth'}
       },
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         exclude: [{challenges: [0, 1]}]
       },
       {
-        path: path.join(__dirname, 'challenges', 'fail'),
+        name: 'fail',
         exclude: [{challenges: [0, 1]}]
       },
     ]
@@ -342,13 +340,13 @@ const results = {
   [captchaAndMathChallegeSubplebbit.title]: {
     [highKarmaAuthor.address]: {
       pendingChallenges: [
-        { challenge: '10 - 2', answer: '8', type: 'text' },
+        { challenge: '...', answer: '...', type: 'image' },
         { challenge: '94 + 25', answer: '119', type: 'text' }
       ]
     },
     [lowKarmaAuthor.address]: {
       pendingChallenges: [
-        { challenge: '7 - 7', answer: '0', type: 'text' },
+        { challenge: '...', answer: '...', type: 'image' },
         { challenge: '99 - 90', answer: '9', type: 'text' }
       ]
     }

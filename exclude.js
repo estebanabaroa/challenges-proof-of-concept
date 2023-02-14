@@ -166,7 +166,7 @@ const shouldExcludeAuthorCommentCids = async (subplebbitChallenge, commentCids, 
     const sleep = (ms) => new Promise(r => setTimeout(r, ms))
     const pendingKey = commentCid + plebbit.plebbitOptions?.ipfsGatewayUrl + plebbit.plebbitOptions?.ipfsHttpClientOptions?.url
     while (getCommentPending[pendingKey] === true) {
-      await sleep(100)
+      await sleep(20)
     }
     getCommentPending[pendingKey] = true
 

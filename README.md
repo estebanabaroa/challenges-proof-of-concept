@@ -36,6 +36,7 @@ ChallengeFile { // the result of the function exported by the challenge file
   optionInputs?: OptionInput[] // the options inputs fields to display to the user
   type: 'image' | 'text' | 'audio' | 'video' | 'html'
   challenge?: string // some challenges can be static and asked before the user publishes, like a password for example
+  description?: string // describe what the challenge does to display in the UI
   getChallenge: GetChallengeFunction
 }
 GetChallengeFunction {
