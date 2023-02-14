@@ -39,7 +39,7 @@ class Comment extends EventEmitter {
         this.author.subplebbit.firstCommentTimestamp = Math.round(Date.now() / 1000) - 60*60*24*1 // 1 day ago
       }
       this.emit('update', this)
-    }, 100).unref()
+    }, 5).unref()
   }
   async stop() {
     this.removeAllListeners()
