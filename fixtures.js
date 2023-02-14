@@ -333,6 +333,9 @@ const challengeCommentCids = {
 const challengeAnswers = {
   [highKarmaAuthor.address]: {
     [passwordChallegeSubplebbit.title]: ['password']
+  },
+  [lowKarmaAuthor.address]: {
+    [passwordChallegeSubplebbit.title]: ['wrong']
   }
 }
 

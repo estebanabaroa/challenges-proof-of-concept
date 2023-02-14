@@ -17,14 +17,24 @@ const plebbitJsChallenges = {
   'evm-contract-call': evmContractCall
 }
 
-const getPendingChallengesOrChallengeVerification = async (challengeRequestMessage, subplebbit) => {
-  if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
-    throw Error(`getPendingChallengesOrChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
+const validateChallengeOrChallengeResult = (challengeOrChallengeResult, challengeIndex, subplebbit) => {
+  const subplebbitChallengeSettings = subplebbit.settings.challenges[challengeIndex]
+  const error = `invalid challenge result from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${challengeIndex}`
+  if (challengeOrChallengeResult?.success !== undefined) {
+    if (typeof challengeOrChallengeResult?.success !== 'boolean') {
+      throw Error(error)
+    }
   }
-  if (typeof subplebbit?.plebbit?.getComment !== 'function') {
-    throw Error(`getPendingChallengesOrChallengeVerification invalid subplebbit argument '${subplebbit}' invalid subplebbit.plebbit instance`)
+  else if (
+    typeof challengeOrChallengeResult?.challenge !== 'string' ||
+    typeof challengeOrChallengeResult?.type !== 'string' ||
+    typeof challengeOrChallengeResult?.verify !== 'function'
+  ) {
+    throw Error(error)
   }
+}
 
+const getPendingChallengesOrChallengeVerification = async (challengeRequestMessage, subplebbit) => {
   const challengeResults = []
   // interate over all challenges of the subplebbit, can be more than 1
   for (let [challengeIndex, subplebbitChallengeSettings] of subplebbit.settings?.challenges?.entries()) {
@@ -53,6 +63,7 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
     // we don't have the challenge answer message yet
     const challengeAnswerMessage = undefined
     const challengeResult = await challengeFile.getChallenge(subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex)
+    validateChallengeOrChallengeResult(challengeResult, challengeIndex, subplebbit)
     challengeResults.push(challengeResult)
   }
 
@@ -123,6 +134,14 @@ const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, c
   }
   const challengeResultsWithPendingIndexes = await Promise.all(verifyChallengePromises)
 
+  // validate results
+  for (const [i, challengeResult] of challengeResultsWithPendingIndexes.entries()) {
+    if (typeof challengeResult?.success !== 'boolean') {
+      const subplebbitChallengeSettings = subplebbit.settings.challenges[pendingChallenges[i].index]
+      throw Error(`invalid challenge result from subplebbit challenge '${subplebbitChallengeSettings.name || subplebbitChallengeSettings.path}' index ${pendingChallenges[i].index}`)
+    }
+  }
+
   // when filtering only pending challenges, the original indexes get lost so restore them
   const challengeResults = []
   const challengeResultToPendingChallenge = []
@@ -135,7 +154,7 @@ const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, c
   const challengeErrors = []
   for (let [challengeIndex, challengeResult] of challengeResults.entries()) {
     // the challenge results that were filtered out were already successful
-    if (!challengeResult) {
+    if (challengeResult === undefined) {
       continue
     }
 
@@ -161,13 +180,26 @@ const getChallengeVerificationFromChallengeAnswers = async (pendingChallenges, c
   }
 }
 
-const getChallengeVerification = async (challengeRequest, subplebbit, getChallengeAnswers) => {
-  const {pendingChallenges, pendingChallengeIndexes, challengeSuccess, challengeErrors} = await getPendingChallengesOrChallengeVerification(challengeRequest, subplebbit)
+const getChallengeVerification = async (challengeRequestMessage, subplebbit, getChallengeAnswers) => {
+  if (!challengeRequestMessage || typeof challengeRequestMessage !== 'object') {
+    throw Error(`getChallengeVerification invalid challengeRequestMessage argument '${challengeRequestMessage}'`)
+  }
+  if (typeof subplebbit?.plebbit?.getComment !== 'function') {
+    throw Error(`getChallengeVerification invalid subplebbit argument '${subplebbit}' invalid subplebbit.plebbit instance`)
+  }
+  if (typeof getChallengeAnswers !== 'function') {
+    throw Error(`getChallengeVerification invalid getChallengeAnswers argument '${getChallengeAnswers}' not a function`)
+  }
+
+  const {pendingChallenges, pendingChallengeIndexes, challengeSuccess, challengeErrors} = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
 
   let challengeVerification
   // was able to verify without asking author for challenges
   if (!pendingChallenges) {
-    challengeVerification = {challengeSuccess, challengeErrors}
+    challengeVerification = {challengeSuccess}
+    if (challengeErrors) {
+      challengeVerification.challengeErrors = challengeErrors
+    }
   }
   // author still has some pending challenges to complete
   else {

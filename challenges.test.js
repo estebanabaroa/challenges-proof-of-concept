@@ -1,4 +1,4 @@
-require('util').inspect.defaultOptions.depth = null
+// require('util').inspect.defaultOptions.depth = null
 
 const {getPendingChallengesOrChallengeVerification, getChallengeVerificationFromChallengeAnswers, getChallengeVerification, plebbitJsChallenges, getSubplebbitChallengeFromSubplebbitChallengeSettings} = require('./challenges')
 const {expect} = require('chai')
@@ -126,6 +126,58 @@ describe("getChallengeVerification", () => {
     }
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, getChallengeAnswersSucceedAll)
     expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+  })
+
+  it("password preanswer and no preanswer", async () => {
+    const subplebbit = {
+      settings: {
+        challenges: [
+          {name: 'question', options: {
+            question: 'What is the password?',
+            answer: 'password'
+          }}
+        ]
+      },
+      plebbit: await Plebbit()
+    }
+
+    // correct preanswered
+    let challengeRequestMessage = {
+      publication: {author},
+      challengeAnswers: ['password' ]
+    }
+    const shouldNotCall = async () => {
+      throw Error('should not call')
+    }
+    let challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+
+    // wrong preanswered
+    challengeRequestMessage = {
+      publication: {author},
+      challengeAnswers: ['wrong' ]
+    }
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    expect(challengeVerification.challengeSuccess).to.equal(false)
+    expect(challengeVerification.challengeErrors[0]).to.equal('Wrong answer.')
+
+    // correct answered via challenge
+    challengeRequestMessage = {
+      publication: {author},
+    }
+    const getChallengeAnswers = async (challenges) => {
+      return ['password']
+    }
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, getChallengeAnswers)
+    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+
+    // wrong answered via challenge
+    const getChallengeAnswersWrong = async (challenges) => {
+      return ['wrong']
+    }
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, getChallengeAnswersWrong)
+    expect(challengeVerification.challengeSuccess).to.equal(false)
+    expect(challengeVerification.challengeErrors[0]).to.equal('Wrong answer.')
   })
 
   it("getChallengeVerificationFromChallengeAnswers", async () => {
