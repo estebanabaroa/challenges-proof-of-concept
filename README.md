@@ -62,6 +62,8 @@ Exclude { // all conditions in Exclude are AND, for OR, use another Exclude item
   vote?: boolean // exclude challenge if publication is a vote
   role?: string[] // exclude challenge if author.role.role = one of the string, singular because it only has to match 1 role
   address?: string[] // exclude challenge if author.address = one of the string, singular because it only has to match 1 address
+  rateLimit?: number // exclude if publication per hour is lower than ratelimit
+  rateLimitChallengeSuccess?: boolean // only rate limit if the challengeVerification.challengeSuccess === rateLimitChallengeSuccess
 }
 ExcludeSubplebbit { // singular because it only has to match 1 subplebbit
   addresses: string[] // list of subplebbit addresses that can be used to exclude, plural because not a condition field like 'role'

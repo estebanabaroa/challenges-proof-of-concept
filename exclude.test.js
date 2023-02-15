@@ -1,6 +1,6 @@
 // require('util').inspect.defaultOptions.depth = null
 
-const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess} = require('./exclude')
+const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess, testRateLimit, addToRateLimiter} = require('./exclude')
 const {expect} = require('chai')
 const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids, results} = require('./fixtures')
 
@@ -330,5 +330,16 @@ describe("shouldExcludeChallengeCommentCids", () => {
     expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsEmpty, plebbit)).to.equal(false)
     expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsWrongSubplebbitAddress, plebbit)).to.equal(false)
     expect(await shouldExcludeChallengeCommentCids(subplebbitChallenge, commentCidsMoreThanMax, plebbit)).to.equal(false)
+  })
+})
+
+describe.only("testRateLimit", () => {
+  it("any publication type any challenge success", async () => {
+    const exclude = {rateLimit: 1}
+    const publication = {author: {address: String(Math.random())}}
+    const challengeSuccess = true
+    expect(testRateLimit(exclude, publication)).to.equal(true)
+    addToRateLimiter(exclude, publication, challengeSuccess)
+    expect(testRateLimit(exclude, publication)).to.equal(false)
   })
 })

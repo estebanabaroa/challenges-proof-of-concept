@@ -154,7 +154,7 @@ const whitelistChallegeSubplebbit = {
         },
         // challenge should never be triggered if the author address is excluded
         exclude: [
-          {address: [highKarmaAuthor.address]},
+          {address: ['high-karma.eth']},
         ]
       }
     ]
@@ -294,8 +294,8 @@ const twoOutOf4SuccessInverseChallegeSubplebbit = {
     ]
   }
 }
-const cooldownChallegeSubplebbit = {
-  title: 'cooldown challenge subplebbit',
+const rateLimitChallegeSubplebbit = {
+  title: 'rate limit challenge subplebbit',
   settings: {
     challenges: [
       {
@@ -304,20 +304,42 @@ const cooldownChallegeSubplebbit = {
       {
         name: 'fail',
         options: {
-          error: `You're doing this too much, there's a cooldown: 30 minutes post, 15 minutes reply, 1 minute vote.`
+          error: `You're doing this too much, rate limit: 1 post/h, 10 replies/h, 100 votes/h.`
         },
-        // different cooldown per publication type, no cooldown for mods
         exclude: [
-          {post: true, cooldown: 60*30},
-          {reply: true, cooldown: 60*15},
-          {vote: true, cooldown: 60*1},
+          // different rate limit per publication type
+          {post: true, rateLimit: 1}, // 1 per hour
+          {reply: true, rateLimit: 10}, // 10 per hour
+          {vote: true, rateLimit: 100}, // 100 per hour
+          // no cooldown for mods 
           {role: ['admin', 'moderator']}
         ]
       },
     ]
   }
 }
-
+const rateLimitChallengeFailureChallegeSubplebbit = {
+  title: 'rate limit challenge failure challenge subplebbit',
+  settings: {
+    challenges: [
+      {
+        name: 'text-math',
+      },
+      {
+        name: 'fail',
+        options: {
+          error: `You're doing this too much.`
+        },
+        exclude: [
+          // only 1 successful publication per hour
+          {rateLimit: 1, rateLimitChallengeSuccess: true},
+          // only 100 failed challenge request per hour
+          {rateLimit: 100, rateLimitChallengeSuccess: false}
+        ]
+      },
+    ]
+  }
+}
 // define mock author karma scores and account age
 const subplebbitAuthors = {
   [highKarmaAuthor.address]: {

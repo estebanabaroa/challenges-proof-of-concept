@@ -1,5 +1,6 @@
 const TinyCache = require('tinycache')
 const QuickLRU = require('quick-lru')
+const {RateLimiter} = require('limiter')
 
 // e.g. secondsToGoBack = 60 would return the timestamp 1 minute ago
 const getTimestampSecondsAgo = (secondsToGoBack) => Math.round(Date.now() / 1000) - secondsToGoBack
@@ -28,17 +29,75 @@ const testVote = (excludeVote, publication) => testIs(excludeVote, publication, 
 const testReply = (excludeReply, publication) => testIs(excludeReply, publication, isReply)
 const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
 
-// keep track of the last time
-const cooldownCache = new QuickLRU({maxSize: 10000})
-const addToCooldownCache = (publication) => {
-  let publicationType = 'post'
-  if (isVote(publication)) {
-    publicationType = 'vote'
+const rateLimiters = new QuickLRU({maxSize: 10000})
+const getRateLimiters = (exclude, publication, challengeSuccess) => {
+  if (exclude?.rateLimit === undefined) {
+    return []
   }
-  else if (isReply(publication)) {
-    publicationType = 'reply'
+  const getRateLimiterName = (publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
+  const getOrCreateRateLimiter = (publicationType, challengeSuccess) => {
+    let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
+    if (!rateLimiter) {
+      rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
+      rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
+    }
+    return rateLimiter
   }
-  cooldownCache.set(publicationType + publication.author.address, Math.round(Date.now()/ 1000))
+
+  // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
+  const filteredRateLimiters = {}
+  const addFilteredRateLimiter = (publicationType) => {
+    if (typeof challengeSuccess === 'boolean') {
+      filteredRateLimiters[getRateLimiterName(publicationType, challengeSuccess)] = getOrCreateRateLimiter(publicationType, challengeSuccess)
+    }
+    // if challengeSuccess isn't defined, add both challengeSuccess true/false
+    else {
+      filteredRateLimiters[getRateLimiterName(publicationType, true)] = getOrCreateRateLimiter(publicationType, true)
+      filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
+    }
+  }
+  if (testPost(exclude.post, publication)) {
+    addFilteredRateLimiter('post')
+  }
+  if (testReply(exclude.reply, publication)) {
+    addFilteredRateLimiter('reply')
+  }
+  if (testVote(exclude.vote, publication)) {
+    addFilteredRateLimiter('vote')
+  }
+  const filteredRateLimitersArray = []
+  for (const i in filteredRateLimiters) {
+    filteredRateLimitersArray.push(filteredRateLimiters[i])
+  }
+  return filteredRateLimitersArray
+}
+
+const testRateLimit = (exclude, publication) => {
+  if (exclude?.rateLimit === undefined) {
+    return true
+  }
+
+  let challengeSuccess
+  // if rateLimitChallengeSuccess is undefined, only use {challengeSuccess: true} rate limiters
+  if (exclude.rateLimitChallengeSuccess === undefined) {
+    challengeSuccess = true
+  }
+
+  const rateLimiters = getRateLimiters(exclude, publication, challengeSuccess)
+  for (const rateLimiter of rateLimiters) {
+    // tokensRemaining > 0 doesn't work
+    if (rateLimiter.getTokensRemaining() >= 1) {
+      return true
+    }
+  }
+  return false
+}
+
+const addToRateLimiter = (exclude, publication, challengeSuccess) => {
+  const rateLimiters = getRateLimiters(exclude, publication, challengeSuccess)
+  for (const rateLimiter of rateLimiters) {
+    rateLimiter.tryRemoveTokens(1)
+  }
 }
 
 const shouldExcludePublication = (subplebbitChallenge, publication) => {
@@ -64,7 +123,8 @@ const shouldExcludePublication = (subplebbitChallenge, publication) => {
       !exclude.address?.length &&
       exclude.post === undefined &&
       exclude.reply === undefined &&
-      exclude.vote === undefined
+      exclude.vote === undefined &&
+      exclude.rateLimit === undefined
     ) {
       continue
     }
@@ -195,7 +255,6 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
 
     // author address doesn't match author
     if (cachedComment?.author?.address !== author.address) {
-      console.log({cachedComment, author})
       throw Error(`comment author address doesn't match publication author address`)
     }
 
@@ -316,4 +375,10 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
   return false
 }
 
-module.exports = {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess, addToCooldownCache}
+module.exports = {
+  shouldExcludeChallengeCommentCids, 
+  shouldExcludePublication, 
+  shouldExcludeChallengeSuccess, 
+  addToRateLimiter, 
+  testRateLimit
+}
