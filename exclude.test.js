@@ -835,4 +835,37 @@ describe("testRateLimit", () => {
     expect(testRateLimit(excludeReply, publicationReply)).to.equal(false)
     expect(testRateLimit(excludeVote, publicationReply)).to.equal(true)
   })
+
+  it("same exclude rateLimit multiple times", async () => {
+    const author = {address: getRandomAddress()}
+    const exclude1 = {rateLimit: 1}
+    const exclude1Copy = {rateLimit: 1}
+    const exclude2 = {rateLimit: 2}
+    const excludePost1 = {rateLimit: 1, post: true}
+    const excludePost2 = {rateLimit: 2, post: true}
+    const excludeArray = [exclude1, exclude1Copy, exclude2, excludePost1, excludePost2]
+    const publicationPost = {author}
+    const challengeSuccess = true
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(true)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludePost1, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludePost2, publicationPost)).to.equal(true)
+
+    // publish 1 post
+    addToRateLimiter(excludeArray, publicationPost, challengeSuccess)
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(false)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludePost1, publicationPost)).to.equal(false)
+    expect(testRateLimit(excludePost2, publicationPost)).to.equal(true)
+
+    // // publish 2 post
+    addToRateLimiter(excludeArray, publicationPost, challengeSuccess)
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(false)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(false)
+    expect(testRateLimit(excludePost1, publicationPost)).to.equal(false)
+    expect(testRateLimit(excludePost2, publicationPost)).to.equal(false)
+  })
 })
