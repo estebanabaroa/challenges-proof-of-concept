@@ -2,9 +2,6 @@ const TinyCache = require('tinycache')
 const QuickLRU = require('quick-lru')
 const {RateLimiter} = require('limiter')
 const {
-  isVote, 
-  isReply, 
-  isPost, 
   testVote, 
   testReply,
   testPost,
