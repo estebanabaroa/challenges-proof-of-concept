@@ -1,4 +1,3 @@
-const TinyCache = require('tinycache')
 const QuickLRU = require('quick-lru')
 const {RateLimiter} = require('limiter')
 const {
@@ -43,7 +42,6 @@ const getRateLimitersToTest = (exclude, publication, challengeSuccess) => {
   if (testVote(exclude.vote, publication) && ![exclude.post, exclude.reply].includes(true)) {
     addFilteredRateLimiter(exclude, publication, 'vote', challengeSuccess, filteredRateLimiters)
   }
-
   return filteredRateLimiters
 }
 
@@ -87,7 +85,6 @@ const getRateLimitersToAddTo = (excludeArray, publication, challengeSuccess) => 
     if (exclude?.rateLimit === undefined) {
       continue
     }
-
     if (isPost(publication)) {
       addFilteredRateLimiter(exclude, publication, 'post', challengeSuccess, filteredRateLimiters)
     }
@@ -98,7 +95,6 @@ const getRateLimitersToAddTo = (excludeArray, publication, challengeSuccess) => 
       addFilteredRateLimiter(exclude, publication, 'vote', challengeSuccess, filteredRateLimiters)
     }
   }
-
   return filteredRateLimiters
 }
 
