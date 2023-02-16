@@ -1,4 +1,4 @@
-const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess} = require('./exclude')
+const {shouldExcludeChallengeCommentCids, shouldExcludePublication, shouldExcludeChallengeSuccess, addToRateLimiter} = require('./exclude')
 
 // all challenges included with plebbit-js, in Plebbit.challenges
 const textMath = require('./plebbit-js-challenges/text-math')
@@ -228,6 +228,10 @@ const getChallengeVerification = async (challengeRequestMessage, subplebbit, get
     const challengeAnswers = await getChallengeAnswers(challenges)
     challengeVerification = await getChallengeVerificationFromChallengeAnswers(pendingChallenges, challengeAnswers, subplebbit)
   }
+
+  // store the publication result and author address in mem cache for rateLimit exclude challenge settings
+  addToRateLimiter(subplebbit.settings?.challenges, challengeRequestMessage.publication, challengeVerification.challengeSuccess)
+
   return challengeVerification
 }
 

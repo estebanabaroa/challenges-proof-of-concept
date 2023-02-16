@@ -4,6 +4,10 @@ const {getPendingChallengesOrChallengeVerification, getChallengeVerificationFrom
 const {expect} = require('chai')
 const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, challengeCommentCids, results} = require('./fixtures')
 
+// sometimes use random addresses because the rate limiter 
+// is based on author addresses and doesn't reset between tests
+const getRandomAddress = () => String(Math.random())
+
 describe("plebbitJsChallenges", () => {
   let TextMathFactory = plebbitJsChallenges['text-math']
   let CaptchaCanvasV3Factory = plebbitJsChallenges['text-math']
@@ -178,6 +182,53 @@ describe("getChallengeVerification", () => {
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, getChallengeAnswersWrong)
     expect(challengeVerification.challengeSuccess).to.equal(false)
     expect(challengeVerification.challengeErrors[0]).to.equal('Wrong answer.')
+  })
+
+  it.skip("rate limited", async () => {
+    const subplebbit = {
+      settings: {
+        challenges: [
+          {
+            name: 'fail',
+            options: {
+              error: 'rate limited 1'
+            },
+            exclude: [{rateLimit: 1}]
+
+          },
+          {
+            name: 'fail',
+            options: {
+              error: 'rate limited 2'
+            },
+            exclude: [{rateLimit: 1, rateLimitChallengeSuccess: false}]
+          }
+        ]
+      },
+      plebbit: await Plebbit()
+    }
+
+    const challengeRequestMessage = {
+      publication: {author: {address: getRandomAddress()}},
+    }
+    const shouldNotCall = async () => {
+      throw Error('should not call')
+    }
+
+    // first rate limit not triggered
+    let challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    expect(challengeVerification).to.deep.equal({ challengeSuccess: true })
+
+    // first rate limit triggered
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    console.log({challengeVerification})
+    expect(challengeVerification).to.deep.equal({"challengeErrors": ["rate limited 1"], "challengeSuccess": false})
+
+    // second rate limit triggered
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    console.log({challengeVerification})
+    expect(challengeVerification).to.deep.equal({"challengeErrors": ["rate limited 1", "rate limited 2"], "challengeSuccess": false})
   })
 
   it("getChallengeVerificationFromChallengeAnswers", async () => {

@@ -85,7 +85,7 @@ const getRateLimiters = (excludeArray, publication, challengeSuccess) => {
       let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
       if (!rateLimiter) {
         rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
-        rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess)
+        rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess) // add name for debugging
         rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
       }
       return rateLimiter
@@ -158,7 +158,7 @@ const testRateLimit = (exclude, publication) => {
   for (const rateLimiter of rateLimiters) {
     const tokensRemaining = rateLimiter.getTokensRemaining()
     // token per action is 1, so any value below 1 is invalid
-    console.log(rateLimiter.name, tokensRemaining)
+    console.log(rateLimiter.name, tokensRemaining >= 1)
     if (tokensRemaining < 1) {
       return false
     }
@@ -182,7 +182,12 @@ const addToRateLimiter = (subplebbitChallenges, publication, challengeSuccess) =
   }
 
   // get all exclude items from all subplebbit challenges
-  const excludeArray = subplebbitChallenges.map(subplebbitChallenge => (subplebbitChallenge.exclude || [])).flat()
+  const excludeArray = []
+  for (const subplebbitChallenge of subplebbitChallenges) {
+    for (const exclude of subplebbitChallenge?.exclude || []) {
+      excludeArray.push(exclude)
+    }
+  }
 
   if (!excludeArray.length) {
     // no need to add to rate limiter if the subplebbit has no exclude rules in any challenges
@@ -207,6 +212,9 @@ const shouldExcludePublication = (subplebbitChallenge, publication) => {
 
   if (!subplebbitChallenge.exclude) {
     return false
+  }
+  if (!Array.isArray(subplebbitChallenge.exclude)) {
+    throw Error(`shouldExcludePublication invalid subplebbitChallenge argument '${subplebbitChallenge}' subplebbitChallenge.exclude not an array`)
   }
 
   // if match any of the exclude array, should exclude

@@ -541,7 +541,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = true
@@ -555,7 +555,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = false
@@ -568,7 +568,7 @@ describe("testRateLimit", () => {
 
   it("10 any publication type", async () => {
     const exclude = {rateLimit: 10}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication = {author: {address: getRandomAddress()}}
     const challengeSuccess = true
     expect(testRateLimit(exclude, publication)).to.equal(true)
@@ -582,7 +582,7 @@ describe("testRateLimit", () => {
   it("1 post type true", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -607,7 +607,7 @@ describe("testRateLimit", () => {
   it("1 post type true challengeSuccess false", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -625,7 +625,7 @@ describe("testRateLimit", () => {
   it("1 post type false", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -647,7 +647,7 @@ describe("testRateLimit", () => {
   it("1 post and reply type false", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: false, reply: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -667,7 +667,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, rateLimitChallengeSuccess: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = true
@@ -681,7 +681,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, rateLimitChallengeSuccess: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = false
@@ -696,7 +696,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, rateLimitChallengeSuccess: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = true
@@ -711,7 +711,7 @@ describe("testRateLimit", () => {
     const author1 = {address: getRandomAddress()}
     const author2 = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, rateLimitChallengeSuccess: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publication1 = {author: author1}
     const publication2 = {author: author2}
     const challengeSuccess = false
@@ -725,7 +725,7 @@ describe("testRateLimit", () => {
   it("1 post type true rateLimitChallengeSuccess true", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true, rateLimitChallengeSuccess: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -750,7 +750,7 @@ describe("testRateLimit", () => {
   it("1 post type true rateLimitChallengeSuccess true challengeSuccess false", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true, rateLimitChallengeSuccess: true}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -775,7 +775,7 @@ describe("testRateLimit", () => {
   it("1 post type true rateLimitChallengeSuccess false challengeSuccess true", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true, rateLimitChallengeSuccess: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -800,7 +800,7 @@ describe("testRateLimit", () => {
   it("1 post type true rateLimitChallengeSuccess false challengeSuccess false", async () => {
     const author = {address: getRandomAddress()}
     const exclude = {rateLimit: 1, post: true, rateLimitChallengeSuccess: false}
-    const subplebbitChallenges = [{exclude}]
+    const subplebbitChallenges = [{exclude: [exclude]}]
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
     const publicationVote = {author, commentCid: 'Qm...', vote: 0}
@@ -827,7 +827,7 @@ describe("testRateLimit", () => {
     const excludePost = {rateLimit: 1, post: true}
     const excludeReply = {rateLimit: 1, reply: true}
     const excludeVote = {rateLimit: 1, vote: true}
-    const subplebbitChallenges = [{exclude: excludePost}, {exclude: excludeReply}, {exclude: excludeVote}]
+    const subplebbitChallenges = [{exclude: [excludePost]}, {exclude: [excludeReply]}, {exclude: [excludeVote]}]
 
     const publicationPost = {author}
     const publicationReply = {author, parentCid: 'Qm...'}
@@ -876,11 +876,11 @@ describe("testRateLimit", () => {
     const excludePost1 = {rateLimit: 1, post: true}
     const excludePost2 = {rateLimit: 2, post: true}
     const subplebbitChallenges = [
-      {exclude: exclude1}, 
-      {exclude: exclude1Copy}, 
-      {exclude: exclude2},
-      {exclude: excludePost1},
-      {exclude: excludePost2}
+      {exclude: [exclude1]}, 
+      {exclude: [exclude1Copy]}, 
+      {exclude: [exclude2]},
+      {exclude: [excludePost1]},
+      {exclude: [excludePost2]}
     ]
     const publicationPost = {author}
     const challengeSuccess = true
@@ -905,5 +905,33 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude2, publicationPost)).to.equal(false)
     expect(testRateLimit(excludePost1, publicationPost)).to.equal(false)
     expect(testRateLimit(excludePost2, publicationPost)).to.equal(false)
+  })
+
+  it("same exclude rateLimit multiple times different rateLimitChallengeSuccess", async () => {
+    const author = {address: getRandomAddress()}
+    const exclude1 = {rateLimit: 1}
+    const exclude2 = {rateLimit: 1, rateLimitChallengeSuccess: false}
+    const subplebbitChallenges = [
+      {exclude: [exclude1]}, 
+      {exclude: [exclude2]}
+    ]
+    const publicationPost = {author}
+    let challengeSuccess = true
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(true)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(true)
+
+    // publish 1 post
+    addToRateLimiter(subplebbitChallenges, publicationPost, challengeSuccess)
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(false)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(true)
+
+    // publish 2 post
+    challengeSuccess = false
+    addToRateLimiter(subplebbitChallenges, publicationPost, challengeSuccess)
+
+    expect(testRateLimit(exclude1, publicationPost)).to.equal(false)
+    expect(testRateLimit(exclude2, publicationPost)).to.equal(false)
   })
 })
