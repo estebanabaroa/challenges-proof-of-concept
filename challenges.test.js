@@ -49,7 +49,7 @@ describe("getPendingChallengesOrChallengeVerification", () => {
 
         const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
         const expectedChallengeResult = results[subplebbit?.title]?.[author?.address]
-        console.dir({challengeResult, expectedChallengeResult}, {depth: null})
+        // console.dir({challengeResult, expectedChallengeResult}, {depth: null}) // debug the tests
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)
@@ -232,7 +232,7 @@ describe("getChallengeVerification", () => {
           {
             name: 'question',
             options: {
-              // undefined answer will cause challenge to throw
+              // undefined answer will cause question challenge to throw
               answer: undefined
             },
           },

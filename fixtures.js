@@ -299,20 +299,15 @@ const rateLimitChallegeSubplebbit = {
   settings: {
     challenges: [
       {
-        name: 'text-math',
-      },
-      {
         name: 'fail',
         options: {
-          error: `You're doing this too much, rate limit: 1 post/h, 10 replies/h, 100 votes/h.`
+          error: `You're doing this too much, rate limit: 0 post/h, 10 replies/h, 100 votes/h.`
         },
         exclude: [
           // different rate limit per publication type
-          {post: true, rateLimit: 1}, // 1 per hour
+          {post: true, rateLimit: 0}, // 0 per hour
           {reply: true, rateLimit: 10}, // 10 per hour
           {vote: true, rateLimit: 100}, // 100 per hour
-          // no cooldown for mods 
-          {role: ['admin', 'moderator']}
         ]
       },
     ]
@@ -322,9 +317,6 @@ const rateLimitChallengeFailureChallegeSubplebbit = {
   title: 'rate limit challenge failure challenge subplebbit',
   settings: {
     challenges: [
-      {
-        name: 'text-math',
-      },
       {
         name: 'fail',
         options: {
@@ -379,8 +371,8 @@ const subplebbits = [
   excludeFriendlySubKarmaChallegeSubplebbit,
   twoOutOf4SuccessChallegeSubplebbit,
   twoOutOf4SuccessInverseChallegeSubplebbit,
-  // rateLimitChallegeSubplebbit,
-  // rateLimitChallengeFailureChallegeSubplebbit
+  rateLimitChallegeSubplebbit,
+  rateLimitChallengeFailureChallegeSubplebbit
 ]
 
 const results = {
@@ -480,6 +472,28 @@ const results = {
         "You're not allowed to publish.",
         "You're not allowed to publish."
       ]
+    }
+  },
+  [rateLimitChallegeSubplebbit.title]: {
+    [highKarmaAuthor.address]: {
+      challengeSuccess: false,
+      challengeErrors: [
+        "You're doing this too much, rate limit: 0 post/h, 10 replies/h, 100 votes/h."
+      ]
+    },
+    [lowKarmaAuthor.address]: {
+      challengeSuccess: false,
+      challengeErrors: [
+        "You're doing this too much, rate limit: 0 post/h, 10 replies/h, 100 votes/h."
+      ]
+    }
+  },
+  [rateLimitChallengeFailureChallegeSubplebbit.title]: {
+    [highKarmaAuthor.address]: {
+      challengeSuccess: true
+    },
+    [lowKarmaAuthor.address]: {
+      challengeSuccess: true
     }
   }
 }
