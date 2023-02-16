@@ -30,118 +30,48 @@ const testReply = (excludeReply, publication) => testIs(excludeReply, publicatio
 const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
 
 const rateLimiters = new QuickLRU({maxSize: 10000})
-const getRateLimiters2 = (exclude, publication, challengeSuccess) => {
-  if (exclude?.rateLimit === undefined) {
-    return []
+const getRateLimiterName = (exclude, publication, publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
+const getOrCreateRateLimiter = (exclude, publication, publicationType, challengeSuccess) => {
+  const rateLimiterName = getRateLimiterName(exclude, publication, publicationType, challengeSuccess)
+  let rateLimiter = rateLimiters.get(rateLimiterName)
+  if (!rateLimiter) {
+    rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
+    rateLimiter.name = rateLimiterName // add name for debugging
+    rateLimiters.set(rateLimiterName, rateLimiter)
   }
-  const getRateLimiterName = (publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
-  const getOrCreateRateLimiter = (publicationType, challengeSuccess) => {
-    let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
-    if (!rateLimiter) {
-      rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
-      rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess)
-      rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
-    }
-    return rateLimiter
-  }
+  return rateLimiter
+}
+const addFilteredRateLimiter = (exclude, publication, publicationType, challengeSuccess, filteredRateLimiters) => {
+  filteredRateLimiters[getRateLimiterName(exclude, publication, publicationType, challengeSuccess)] = getOrCreateRateLimiter(exclude, publication, publicationType, challengeSuccess)
+}
 
+const getRateLimitersToTest = (exclude, publication, challengeSuccess) => {
   // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
   const filteredRateLimiters = {}
-  const addFilteredRateLimiter = (publicationType) => {
-    if (typeof challengeSuccess === 'boolean') {
-      filteredRateLimiters[getRateLimiterName(publicationType, challengeSuccess)] = getOrCreateRateLimiter(publicationType, challengeSuccess)
-    }
-    // if challengeSuccess isn't defined, add both challengeSuccess true/false
-    else {
-      filteredRateLimiters[getRateLimiterName(publicationType, true)] = getOrCreateRateLimiter(publicationType, true)
-      filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
-    }
-  }
   if (testPost(exclude.post, publication) && ![exclude.reply, exclude.vote].includes(true)) {
-    addFilteredRateLimiter('post')
+    addFilteredRateLimiter(exclude, publication, 'post', challengeSuccess, filteredRateLimiters)
   }
   if (testReply(exclude.reply, publication) && ![exclude.post, exclude.vote].includes(true)) {
-    addFilteredRateLimiter('reply')
+    addFilteredRateLimiter(exclude, publication, 'reply', challengeSuccess, filteredRateLimiters)
   }
   if (testVote(exclude.vote, publication) && ![exclude.post, exclude.reply].includes(true)) {
-    addFilteredRateLimiter('vote')
-  }
-  const filteredRateLimitersArray = []
-  for (const i in filteredRateLimiters) {
-    filteredRateLimitersArray.push(filteredRateLimiters[i])
-  }
-  return filteredRateLimitersArray
-}
-const getRateLimiters = (excludeArray, publication, challengeSuccess) => {
-  // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
-  const filteredRateLimiters = {}
-  for (const exclude of excludeArray) {
-    if (exclude?.rateLimit === undefined) {
-      continue
-    }
-
-    const getRateLimiterName = (publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
-    const getOrCreateRateLimiter = (publicationType, challengeSuccess) => {
-      let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
-      if (!rateLimiter) {
-        rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
-        rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess) // add name for debugging
-        rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
-      }
-      return rateLimiter
-    }
-
-    // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
-    const addFilteredRateLimiter = (publicationType) => {
-      if (typeof challengeSuccess === 'boolean') {
-        filteredRateLimiters[getRateLimiterName(publicationType, challengeSuccess)] = getOrCreateRateLimiter(publicationType, challengeSuccess)
-      }
-      // if challengeSuccess isn't defined, add both challengeSuccess true/false
-      else {
-        filteredRateLimiters[getRateLimiterName(publicationType, true)] = getOrCreateRateLimiter(publicationType, true)
-        filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
-      }
-    }
-
-    if (isPost(publication)) {
-      addFilteredRateLimiter('post')
-    }
-    if (isReply(publication)) {
-      addFilteredRateLimiter('reply')
-    }
-    if (isVote(publication)) {
-      addFilteredRateLimiter('vote')
-    }
+    addFilteredRateLimiter(exclude, publication, 'vote', challengeSuccess, filteredRateLimiters)
   }
 
-  const filteredRateLimitersArray = []
-  for (const i in filteredRateLimiters) {
-    filteredRateLimitersArray.push(filteredRateLimiters[i])
-  }
-  return filteredRateLimitersArray
+  return filteredRateLimiters
 }
 
 const testRateLimit = (exclude, publication) => {
-  console.log({exclude, publication})
-  if (exclude?.rateLimit === undefined) {
-    return true
-  }
-  if (exclude.post === true && !isPost(publication)) {
-    return true
-  }
-  if (exclude.reply === true && !isReply(publication)) {
-    return true
-  }
-  if (exclude.vote === true && !isVote(publication)) {
-    return true
-  }
-  if (exclude.post === false && isPost(publication)) {
-    return true
-  }
-  if (exclude.reply === false && isReply(publication)) {
-    return true
-  }
-  if (exclude.vote === false && isVote(publication)) {
+  if (
+    exclude?.rateLimit === undefined ||
+    (exclude.post === true && !isPost(publication)) ||
+    (exclude.reply === true && !isReply(publication)) ||
+    (exclude.vote === true && !isVote(publication)) ||
+    (exclude.post === false && isPost(publication)) ||
+    (exclude.reply === false && isReply(publication)) ||
+    (exclude.vote === false && isVote(publication))
+  ) {
+    // early exit based on exclude type and publication type
     return true
   }
 
@@ -152,18 +82,38 @@ const testRateLimit = (exclude, publication) => {
   }
 
   // check all the rate limiters that match the exclude and publication type
-  const rateLimiters = getRateLimiters2(exclude, publication, challengeSuccess)
-  console.log('test', publication, exclude, rateLimiters.map(r => r.name))
+  const rateLimiters = getRateLimitersToTest(exclude, publication, challengeSuccess)
   // if any of the matching rate limiter is out of tokens, test failed
-  for (const rateLimiter of rateLimiters) {
+  for (const rateLimiter of Object.values(rateLimiters)) {
     const tokensRemaining = rateLimiter.getTokensRemaining()
     // token per action is 1, so any value below 1 is invalid
-    console.log(rateLimiter.name, tokensRemaining >= 1)
     if (tokensRemaining < 1) {
       return false
     }
   }
   return true
+}
+
+const getRateLimitersToAddTo = (excludeArray, publication, challengeSuccess) => {
+  // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
+  const filteredRateLimiters = {}
+  for (const exclude of excludeArray) {
+    if (exclude?.rateLimit === undefined) {
+      continue
+    }
+
+    if (isPost(publication)) {
+      addFilteredRateLimiter(exclude, publication, 'post', challengeSuccess, filteredRateLimiters)
+    }
+    if (isReply(publication)) {
+      addFilteredRateLimiter(exclude, publication, 'reply', challengeSuccess, filteredRateLimiters)
+    }
+    if (isVote(publication)) {
+      addFilteredRateLimiter(exclude, publication, 'vote', challengeSuccess, filteredRateLimiters)
+    }
+  }
+
+  return filteredRateLimiters
 }
 
 const addToRateLimiter = (subplebbitChallenges, publication, challengeSuccess) => {
@@ -194,9 +144,8 @@ const addToRateLimiter = (subplebbitChallenges, publication, challengeSuccess) =
     return
   }
 
-  const rateLimiters = getRateLimiters(excludeArray, publication, challengeSuccess)
-  for (const rateLimiter of rateLimiters) {
-    console.log('remove', rateLimiter.name)
+  const rateLimiters = getRateLimitersToAddTo(excludeArray, publication, challengeSuccess)
+  for (const rateLimiter of Object.values(rateLimiters)) {
     rateLimiter.tryRemoveTokens(1)
   }
 }
@@ -234,6 +183,7 @@ const shouldExcludePublication = (subplebbitChallenge, publication) => {
     }
 
     // if match all of the exclude item properties, should exclude
+    // keep separated for easier debugging
     let shouldExclude = true
     if (!testScore(exclude.postScore, author.subplebbit?.postScore)) {
       shouldExclude = false
@@ -455,7 +405,7 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
       await Promise.any(validateCommentPromises)
     }
     catch (e) {
-      // console.log(validateCommentPromises)
+      // console.log(validateCommentPromises) // debug all validate comments
       e.message = `should not exclude: ${e.message}`
       throw Error(e)
     }
@@ -464,18 +414,18 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
   }
 
   // iterate over all excludes, and test them async
-  const validateExcludePromise = []
+  const validateExcludePromises = []
   for (const exclude of subplebbitChallenge.exclude || []) {
-    validateExcludePromise.push(validateExclude(exclude))
+    validateExcludePromises.push(validateExclude(exclude))
   }
 
   // if at least 1 test passed, should exclude
   try {
-    await Promise.any(validateExcludePromise)
+    await Promise.any(validateExcludePromises)
     return true
   }
   catch (e) {
-    // console.log(validateExcludePromise)
+    // console.log(validateExcludePromises) // debug all validate excludes
   }
 
   // if no exlucde test passed. should not exclude
