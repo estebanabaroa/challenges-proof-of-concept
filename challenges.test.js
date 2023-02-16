@@ -184,7 +184,7 @@ describe("getChallengeVerification", () => {
     expect(challengeVerification.challengeErrors[0]).to.equal('Wrong answer.')
   })
 
-  it.skip("rate limited", async () => {
+  it("rate limited", async () => {
     const subplebbit = {
       settings: {
         challenges: [
@@ -194,7 +194,6 @@ describe("getChallengeVerification", () => {
               error: 'rate limited 1'
             },
             exclude: [{rateLimit: 1}]
-
           },
           {
             name: 'fail',
@@ -221,14 +220,11 @@ describe("getChallengeVerification", () => {
 
     // first rate limit triggered
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
-    console.log({challengeVerification})
-    expect(challengeVerification).to.deep.equal({"challengeErrors": ["rate limited 1"], "challengeSuccess": false})
+    expect(challengeVerification).to.deep.equal({"challengeErrors": ["rate limited 1", undefined], "challengeSuccess": false})
 
     // second rate limit triggered
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
-    challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
-    console.log({challengeVerification})
-    expect(challengeVerification).to.deep.equal({"challengeErrors": ["rate limited 1", "rate limited 2"], "challengeSuccess": false})
+    expect(challengeVerification).to.deep.equal({challengeSuccess: false, challengeErrors: [ 'rate limited 1', 'rate limited 2' ] } ) 
   })
 
   it("getChallengeVerificationFromChallengeAnswers", async () => {
