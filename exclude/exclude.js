@@ -227,7 +227,7 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
       testScore(replyScore, comment.author?.subplebbit?.replyScore) &&
       testFirstCommentTimestamp(firstCommentTimestamp, comment.author?.subplebbit?.firstCommentTimestamp)
     ) {
-      // do nothing, test passed
+      // do nothing, comment is valid
       return
     }
     throw Error(`should not exclude comment cid`)
@@ -260,7 +260,7 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
       }
     }
 
-    // if doesn't throw, at least 1 test comment promise passed
+    // if doesn't throw, at least 1 comment was valid
     try {
       await Promise.any(validateCommentPromises)
     }
@@ -270,16 +270,16 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
       throw Error(e)
     }
 
-    // if exclude test passed, do nothing
+    // if at least 1 comment was valid, do nothing, exclude is valid
   }
 
-  // iterate over all excludes, and test them async
+  // iterate over all excludes, and validate them async
   const validateExcludePromises = []
   for (const exclude of subplebbitChallenge.exclude || []) {
     validateExcludePromises.push(validateExclude(exclude))
   }
 
-  // if at least 1 test passed, should exclude
+  // if at least 1 valid exclude, should exclude
   try {
     await Promise.any(validateExcludePromises)
     return true
@@ -288,7 +288,7 @@ const shouldExcludeChallengeCommentCids = async (subplebbitChallenge, challengeR
     // console.log(validateExcludePromises) // debug all validate excludes
   }
 
-  // if no exlucde test passed. should not exclude
+  // if no exclude are valid, should not exclude
   return false
 }
 
