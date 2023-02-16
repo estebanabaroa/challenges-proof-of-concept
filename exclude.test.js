@@ -9,6 +9,14 @@ const {Plebbit, subplebbits, authors, subplebbitAuthors, challengeAnswers, chall
 const getRandomAddress = () => String(Math.random())
 
 describe("shouldExcludePublication", () => {
+  it("empty", () => {
+    const publication = {author: {address: 'Qm...'}}
+    let subplebbitChallenge = {exclude: []}
+    expect(shouldExcludePublication(subplebbitChallenge, publication)).to.equal(false)
+    subplebbitChallenge = {exclude: undefined}
+    expect(shouldExcludePublication(subplebbitChallenge, publication)).to.equal(false)
+  })
+
   it("firstCommentTimestamp", () => {
     const subplebbitChallenge = {
       exclude: [

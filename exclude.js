@@ -145,34 +145,25 @@ const testRateLimit = (exclude, publication) => {
     return true
   }
 
-  let challengeSuccess
-  // if rateLimitChallengeSuccess is undefined, only use {challengeSuccess: true} rate limiters
-  if (exclude.rateLimitChallengeSuccess === undefined) {
-    challengeSuccess = true
-  }
-  if (exclude.rateLimitChallengeSuccess === true) {
-    challengeSuccess = true
-  }
+  // if rateLimitChallengeSuccess is undefined or true, only use {challengeSuccess: true} rate limiters
+  let challengeSuccess = true
   if (exclude.rateLimitChallengeSuccess === false) {
     challengeSuccess = false
   }
 
+  // check all the rate limiters that match the exclude and publication type
   const rateLimiters = getRateLimiters2(exclude, publication, challengeSuccess)
-
-  let shouldExclude = true
   console.log('test', publication, exclude, rateLimiters.map(r => r.name))
+  // if any of the matching rate limiter is out of tokens, test failed
   for (const rateLimiter of rateLimiters) {
     const tokensRemaining = rateLimiter.getTokensRemaining()
-    // tokensRemaining > 0 doesn't work
-    if (tokensRemaining >= 1) {
-      // return true
+    // token per action is 1, so any value below 1 is invalid
+    console.log(rateLimiter.name, tokensRemaining)
+    if (tokensRemaining < 1) {
+      return false
     }
-    else {
-      shouldExclude = false
-    }
-    console.log(rateLimiter.name, tokensRemaining, {shouldExclude})
   }
-  return shouldExclude
+  return true
 }
 
 const addToRateLimiter = (subplebbitChallengeExclude, publication, challengeSuccess) => {
