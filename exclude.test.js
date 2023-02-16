@@ -144,7 +144,7 @@ describe("shouldExcludePublication", () => {
     const publicationAuthor2 = {author: {address: getRandomAddress()}}
     const challengeSuccess = true
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
-    addToRateLimiter(subplebbitChallenge.exclude[0], publicationAuthor1, challengeSuccess)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(false)
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
   })
@@ -159,33 +159,156 @@ describe("shouldExcludePublication", () => {
     const publicationAuthor2 = {author: {address: getRandomAddress()}}
     const challengeSuccess = false
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
-    addToRateLimiter(subplebbitChallenge.exclude[0], publicationAuthor1, challengeSuccess)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
     // without rateLimitChallengeSuccess, rateLimit only applies to challengeSuccess true publications
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
     expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
   })
 
-  // it.only("rateLimit post, reply, vote", () => {
-  //   const subplebbitChallenge = {
-  //     exclude: [
-  //       {post: true, rateLimit: 1}, // 1 per hour
-  //       {reply: true, rateLimit: 1}, // 1 per hour
-  //       {vote: true, rateLimit: 1}, // 1 per hour
-  //     ]
-  //   }
-  //   const author = {address: getRandomAddress()}
-  //   const publicationPost = {author}
-  //   const publicationReply = {author, parentCid: 'Qm...'}
-  //   const publicationVote = {author, commentCid: 'Qm...', vote: 0}
-  //   const challengeSuccess = true
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(true)
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
-  //   addToRateLimiter(exclude, publicationPost, challengeSuccess)
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
-  //   expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
-  // })
+  it("rateLimit post, reply, vote", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {post: true, rateLimit: 1}, // 1 per hour
+        {reply: true, rateLimit: 1}, // 1 per hour
+        {vote: true, rateLimit: 1}, // 1 per hour
+      ]
+    }
+    const author = {address: getRandomAddress()}
+    const publicationPost = {author}
+    const publicationReply = {author, parentCid: 'Qm...'}
+    const publicationVote = {author, commentCid: 'Qm...', vote: 0}
+    let challengeSuccess = true
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationPost, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationReply, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
+
+    // publish with challengeSuccess false, should do nothing
+    challengeSuccess = false
+    addToRateLimiter(subplebbitChallenge.exclude, publicationVote, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(true)
+
+    // publish with challengeSuccess true, should rate limit
+    challengeSuccess = true
+    addToRateLimiter(subplebbitChallenge.exclude, publicationVote, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+  })
+
+  it("rateLimit rateLimitChallengeSuccess true", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {rateLimit: 1, rateLimitChallengeSuccess: true} // 1 publication per hour
+      ]
+    }
+    const publicationAuthor1 = {author: {address: getRandomAddress()}}
+    const publicationAuthor2 = {author: {address: getRandomAddress()}}
+    const challengeSuccess = true
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
+  })
+
+  it("rateLimit rateLimitChallengeSuccess true challengeSuccess false", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {rateLimit: 1, rateLimitChallengeSuccess: true} // 1 publication per hour
+      ]
+    }
+    const publicationAuthor1 = {author: {address: getRandomAddress()}}
+    const publicationAuthor2 = {author: {address: getRandomAddress()}}
+    const challengeSuccess = false
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
+  })
+
+  it("rateLimit rateLimitChallengeSuccess false challengeSuccess true", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {rateLimit: 1, rateLimitChallengeSuccess: false} // 1 publication per hour
+      ]
+    }
+    const publicationAuthor1 = {author: {address: getRandomAddress()}}
+    const publicationAuthor2 = {author: {address: getRandomAddress()}}
+    const challengeSuccess = true
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
+  })
+
+  it("rateLimit rateLimitChallengeSuccess false challengeSuccess false", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {rateLimit: 1, rateLimitChallengeSuccess: false} // 1 publication per hour
+      ]
+    }
+    const publicationAuthor1 = {author: {address: getRandomAddress()}}
+    const publicationAuthor2 = {author: {address: getRandomAddress()}}
+    const challengeSuccess = false
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(true)
+    addToRateLimiter(subplebbitChallenge.exclude, publicationAuthor1, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor1)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationAuthor2)).to.equal(true)
+  })
+
+  it("rateLimit post, reply rateLimitChallengeSuccess false", () => {
+    const subplebbitChallenge = {
+      exclude: [
+        {post: true, rateLimit: 1, rateLimitChallengeSuccess: false}, // 1 per hour
+        {reply: true, rateLimit: 1}, // 1 per hour
+      ]
+    }
+    const author = {address: getRandomAddress()}
+    const publicationPost = {author}
+    const publicationReply = {author, parentCid: 'Qm...'}
+    const publicationVote = {author, commentCid: 'Qm...', vote: 0}
+    let challengeSuccess = true
+
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    // vote can never pass because it's not included in any of the excludes
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+
+    // no effect because post true and rateLimitChallengeSuccess false
+    addToRateLimiter(subplebbitChallenge.exclude, publicationPost, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+
+    // now has effect because success false
+    challengeSuccess = false
+    addToRateLimiter(subplebbitChallenge.exclude, publicationPost, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+
+    // no effect because reply true, challengeSuccess false and rateLimitChallengeSuccess undefined
+    addToRateLimiter(subplebbitChallenge.exclude, publicationReply, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(true)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+
+    // now has effect because success true
+    challengeSuccess = true
+    addToRateLimiter(subplebbitChallenge.exclude, publicationReply, challengeSuccess)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationPost)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationReply)).to.equal(false)
+    expect(shouldExcludePublication(subplebbitChallenge, publicationVote)).to.equal(false)
+  })
 })
 
 describe("shouldExcludeChallengeSuccess", () => {
@@ -399,7 +522,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = true
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     expect(testRateLimit(exclude, publication1)).to.equal(false)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
   })
@@ -412,7 +535,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = false
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     // without rateLimitChallengeSuccess set, only successful publications are rate limited
     expect(testRateLimit(exclude, publication1)).to.equal(true)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
@@ -425,7 +548,7 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publication)).to.equal(true)
     let count = 20
     while(count--) {
-      addToRateLimiter(exclude, publication, challengeSuccess)  
+      addToRateLimiter([exclude], publication, challengeSuccess)  
     }
     expect(testRateLimit(exclude, publication)).to.equal(false)
   })
@@ -440,15 +563,15 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
@@ -464,7 +587,7 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     // without rateLimitChallengeSuccess set, only successful publications are rate limited
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
@@ -481,12 +604,12 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(false)
     expect(testRateLimit(exclude, publicationVote)).to.equal(false)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(false)
     expect(testRateLimit(exclude, publicationVote)).to.equal(false)
@@ -502,9 +625,9 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(false)
@@ -518,7 +641,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = true
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     expect(testRateLimit(exclude, publication1)).to.equal(false)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
   })
@@ -531,7 +654,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = false
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     // true because if rateLimitChallengeSuccess true, dont count challengeSuccess false
     expect(testRateLimit(exclude, publication1)).to.equal(true)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
@@ -545,7 +668,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = true
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     // true because if rateLimitChallengeSuccess false, dont count challengeSuccess true
     expect(testRateLimit(exclude, publication1)).to.equal(true)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
@@ -559,7 +682,7 @@ describe("testRateLimit", () => {
     const publication2 = {author: author2}
     const challengeSuccess = false
     expect(testRateLimit(exclude, publication1)).to.equal(true)
-    addToRateLimiter(exclude, publication1, challengeSuccess)
+    addToRateLimiter([exclude], publication1, challengeSuccess)
     // false because if rateLimitChallengeSuccess false, count challengeSuccess false
     expect(testRateLimit(exclude, publication1)).to.equal(false)
     expect(testRateLimit(exclude, publication2)).to.equal(true)
@@ -575,15 +698,15 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
@@ -599,15 +722,15 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
@@ -623,15 +746,15 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
@@ -647,17 +770,69 @@ describe("testRateLimit", () => {
     expect(testRateLimit(exclude, publicationPost)).to.equal(true)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationPost, challengeSuccess)
+    addToRateLimiter([exclude], publicationPost, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationReply, challengeSuccess)
+    addToRateLimiter([exclude], publicationReply, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
-    addToRateLimiter(exclude, publicationVote, challengeSuccess)
+    addToRateLimiter([exclude], publicationVote, challengeSuccess)
     expect(testRateLimit(exclude, publicationPost)).to.equal(false)
     expect(testRateLimit(exclude, publicationReply)).to.equal(true)
     expect(testRateLimit(exclude, publicationVote)).to.equal(true)
+  })
+
+  const expectExcludeArray = (excludeArray, publication, value) => {
+    for (const exclude of excludeArray) {
+      expect(testRateLimit(exclude, publication)).to.equal(value)
+    }
+  }
+
+  it("multiple exclude", async () => {
+    const author = {address: getRandomAddress()}
+    const excludePost = {rateLimit: 1, post: true}
+    const excludeReply = {rateLimit: 1, reply: true}
+    const excludeVote = {rateLimit: 1, vote: true}
+    const excludeArray = [excludePost, excludeReply, excludeVote]
+
+    const publicationPost = {author}
+    const publicationReply = {author, parentCid: 'Qm...'}
+    const publicationVote = {author, commentCid: 'Qm...', vote: 0}
+    const challengeSuccess = true
+
+    expect(testRateLimit(excludePost, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludeReply, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludeVote, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludePost, publicationReply)).to.equal(true)
+    expect(testRateLimit(excludeReply, publicationReply)).to.equal(true)
+    expect(testRateLimit(excludeVote, publicationReply)).to.equal(true)
+
+    // publish one post
+    addToRateLimiter(excludeArray, publicationPost, challengeSuccess)
+
+    // test post publication against all exclude, only post exclude fails
+    expect(testRateLimit(excludePost, publicationPost)).to.equal(false)
+    expect(testRateLimit(excludeReply, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludeVote, publicationPost)).to.equal(true)
+
+    // test reply publication against all exclude, none fail because no reply published yet
+    expect(testRateLimit(excludePost, publicationReply)).to.equal(true)
+    expect(testRateLimit(excludeReply, publicationReply)).to.equal(true)
+    expect(testRateLimit(excludeVote, publicationReply)).to.equal(true)
+
+    // publish one reply
+    addToRateLimiter(excludeArray, publicationReply, challengeSuccess)
+
+    // test post publication against all exclude, only post exclude fails
+    expect(testRateLimit(excludePost, publicationPost)).to.equal(false)
+    expect(testRateLimit(excludeReply, publicationPost)).to.equal(true)
+    expect(testRateLimit(excludeVote, publicationPost)).to.equal(true)
+
+    // test reply publication against all exclude, only reply exclude fails
+    expect(testRateLimit(excludePost, publicationReply)).to.equal(true)
+    expect(testRateLimit(excludeReply, publicationReply)).to.equal(false)
+    expect(testRateLimit(excludeVote, publicationReply)).to.equal(true)
   })
 })

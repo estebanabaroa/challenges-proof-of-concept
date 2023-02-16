@@ -57,13 +57,13 @@ const getRateLimiters2 = (exclude, publication, challengeSuccess) => {
       filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
     }
   }
-  if (testPost(exclude.post, publication)) {
+  if (testPost(exclude.post, publication) && ![exclude.reply, exclude.vote].includes(true)) {
     addFilteredRateLimiter('post')
   }
-  if (testReply(exclude.reply, publication)) {
+  if (testReply(exclude.reply, publication) && ![exclude.post, exclude.vote].includes(true)) {
     addFilteredRateLimiter('reply')
   }
-  if (testVote(exclude.vote, publication)) {
+  if (testVote(exclude.vote, publication) && ![exclude.post, exclude.reply].includes(true)) {
     addFilteredRateLimiter('vote')
   }
   const filteredRateLimitersArray = []
@@ -72,42 +72,48 @@ const getRateLimiters2 = (exclude, publication, challengeSuccess) => {
   }
   return filteredRateLimitersArray
 }
-const getRateLimiters = (exclude, publication, challengeSuccess) => {
-  if (exclude?.rateLimit === undefined) {
-    return []
-  }
-  const getRateLimiterName = (publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
-  const getOrCreateRateLimiter = (publicationType, challengeSuccess) => {
-    let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
-    if (!rateLimiter) {
-      rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
-      rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess)
-      rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
-    }
-    return rateLimiter
-  }
-
+const getRateLimiters = (subplebbitChallengeExclude, publication, challengeSuccess) => {
   // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
   const filteredRateLimiters = {}
-  const addFilteredRateLimiter = (publicationType) => {
-    if (typeof challengeSuccess === 'boolean') {
-      filteredRateLimiters[getRateLimiterName(publicationType, challengeSuccess)] = getOrCreateRateLimiter(publicationType, challengeSuccess)
+  for (const exclude of subplebbitChallengeExclude) {
+    if (exclude?.rateLimit === undefined) {
+      continue
     }
-    // if challengeSuccess isn't defined, add both challengeSuccess true/false
-    else {
-      filteredRateLimiters[getRateLimiterName(publicationType, true)] = getOrCreateRateLimiter(publicationType, true)
-      filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
+
+    const getRateLimiterName = (publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
+    const getOrCreateRateLimiter = (publicationType, challengeSuccess) => {
+      let rateLimiter = rateLimiters.get(getRateLimiterName(publicationType, challengeSuccess))
+      if (!rateLimiter) {
+        rateLimiter = new RateLimiter({tokensPerInterval: exclude.rateLimit, interval: "hour", fireImmediately: true})
+        rateLimiter.name = getRateLimiterName(publicationType, challengeSuccess)
+        rateLimiters.set(getRateLimiterName(publicationType, challengeSuccess), rateLimiter)
+      }
+      return rateLimiter
+    }
+
+    // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
+    const addFilteredRateLimiter = (publicationType) => {
+      if (typeof challengeSuccess === 'boolean') {
+        filteredRateLimiters[getRateLimiterName(publicationType, challengeSuccess)] = getOrCreateRateLimiter(publicationType, challengeSuccess)
+      }
+      // if challengeSuccess isn't defined, add both challengeSuccess true/false
+      else {
+        filteredRateLimiters[getRateLimiterName(publicationType, true)] = getOrCreateRateLimiter(publicationType, true)
+        filteredRateLimiters[getRateLimiterName(publicationType, false)] = getOrCreateRateLimiter(publicationType, false)    
+      }
+    }
+
+    if (isPost(publication)) {
+      addFilteredRateLimiter('post')
+    }
+    if (isReply(publication)) {
+      addFilteredRateLimiter('reply')
+    }
+    if (isVote(publication)) {
+      addFilteredRateLimiter('vote')
     }
   }
-  if (isPost(publication)) {
-    addFilteredRateLimiter('post')
-  }
-  if (isReply(publication)) {
-    addFilteredRateLimiter('reply')
-  }
-  if (isVote(publication)) {
-    addFilteredRateLimiter('vote')
-  }
+
   const filteredRateLimitersArray = []
   for (const i in filteredRateLimiters) {
     filteredRateLimitersArray.push(filteredRateLimiters[i])
@@ -116,6 +122,7 @@ const getRateLimiters = (exclude, publication, challengeSuccess) => {
 }
 
 const testRateLimit = (exclude, publication) => {
+  console.log({exclude, publication})
   if (exclude?.rateLimit === undefined) {
     return true
   }
@@ -151,11 +158,11 @@ const testRateLimit = (exclude, publication) => {
   }
 
   const rateLimiters = getRateLimiters2(exclude, publication, challengeSuccess)
+
   let shouldExclude = true
   console.log('test', publication, exclude, rateLimiters.map(r => r.name))
   for (const rateLimiter of rateLimiters) {
     const tokensRemaining = rateLimiter.getTokensRemaining()
-    console.log(rateLimiter.name, tokensRemaining)
     // tokensRemaining > 0 doesn't work
     if (tokensRemaining >= 1) {
       // return true
@@ -163,12 +170,27 @@ const testRateLimit = (exclude, publication) => {
     else {
       shouldExclude = false
     }
+    console.log(rateLimiter.name, tokensRemaining, {shouldExclude})
   }
   return shouldExclude
 }
 
-const addToRateLimiter = (exclude, publication, challengeSuccess) => {
-  const rateLimiters = getRateLimiters(exclude, publication, challengeSuccess)
+const addToRateLimiter = (subplebbitChallengeExclude, publication, challengeSuccess) => {
+  if (!subplebbitChallengeExclude) {
+    // no need to add to rate limiter if the subplebbit has no exclude rules
+    return
+  }
+  if (!Array.isArray(subplebbitChallengeExclude)) {
+    throw Error(`addToRateLimiter invalid argument subplebbitChallengeExclude '${subplebbitChallengeExclude}' not an array`)
+  }
+  if (typeof publication?.author?.address !== 'string') {
+    throw Error(`addToRateLimiter invalid argument publication '${publication}'`)
+  }
+  if (typeof challengeSuccess !== 'boolean') {
+    throw Error(`addToRateLimiter invalid argument challengeSuccess '${challengeSuccess}' not a boolean`)
+  }
+
+  const rateLimiters = getRateLimiters(subplebbitChallengeExclude, publication, challengeSuccess)
   for (const rateLimiter of rateLimiters) {
     console.log('remove', rateLimiter.name)
     rateLimiter.tryRemoveTokens(1)
