@@ -72,10 +72,10 @@ const getRateLimiters2 = (exclude, publication, challengeSuccess) => {
   }
   return filteredRateLimitersArray
 }
-const getRateLimiters = (subplebbitChallengeExclude, publication, challengeSuccess) => {
+const getRateLimiters = (excludeArray, publication, challengeSuccess) => {
   // get all rate limiters associated with the exclude (publication type and challengeSuccess true/false)
   const filteredRateLimiters = {}
-  for (const exclude of subplebbitChallengeExclude) {
+  for (const exclude of excludeArray) {
     if (exclude?.rateLimit === undefined) {
       continue
     }
@@ -166,13 +166,13 @@ const testRateLimit = (exclude, publication) => {
   return true
 }
 
-const addToRateLimiter = (subplebbitChallengeExclude, publication, challengeSuccess) => {
-  if (!subplebbitChallengeExclude) {
-    // no need to add to rate limiter if the subplebbit has no exclude rules
+const addToRateLimiter = (subplebbitChallenges, publication, challengeSuccess) => {
+  if (!subplebbitChallenges) {
+    // subplebbit has no challenges, no need to rate limit
     return
   }
-  if (!Array.isArray(subplebbitChallengeExclude)) {
-    throw Error(`addToRateLimiter invalid argument subplebbitChallengeExclude '${subplebbitChallengeExclude}' not an array`)
+  if (!Array.isArray(subplebbitChallenges)) {
+    throw Error(`addToRateLimiter invalid argument subplebbitChallenges '${subplebbitChallenges}' not an array`)
   }
   if (typeof publication?.author?.address !== 'string') {
     throw Error(`addToRateLimiter invalid argument publication '${publication}'`)
@@ -181,7 +181,15 @@ const addToRateLimiter = (subplebbitChallengeExclude, publication, challengeSucc
     throw Error(`addToRateLimiter invalid argument challengeSuccess '${challengeSuccess}' not a boolean`)
   }
 
-  const rateLimiters = getRateLimiters(subplebbitChallengeExclude, publication, challengeSuccess)
+  // get all exclude items from all subplebbit challenges
+  const excludeArray = subplebbitChallenges.map(subplebbitChallenge => (subplebbitChallenge.exclude || [])).flat()
+
+  if (!excludeArray.length) {
+    // no need to add to rate limiter if the subplebbit has no exclude rules in any challenges
+    return
+  }
+
+  const rateLimiters = getRateLimiters(excludeArray, publication, challengeSuccess)
   for (const rateLimiter of rateLimiters) {
     console.log('remove', rateLimiter.name)
     rateLimiter.tryRemoveTokens(1)
