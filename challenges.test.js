@@ -48,8 +48,8 @@ describe("getPendingChallengesOrChallengeVerification", () => {
         }
 
         const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
-        const expectedChallengeResult = results[subplebbit.title][author.address]
-        // console.log({challengeResult, expectedChallengeResult})
+        const expectedChallengeResult = results[subplebbit?.title]?.[author?.address]
+        console.dir({challengeResult, expectedChallengeResult}, {depth: null})
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)
@@ -223,6 +223,42 @@ describe("getChallengeVerification", () => {
     // second rate limit triggered
     challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
     expect(challengeVerification).to.deep.equal({challengeSuccess: false, challengeErrors: [ 'rate limited 1', 'rate limited 2' ] } ) 
+  })
+
+  it("getChallenge function throws", async () => {
+    const subplebbit = {
+      settings: {
+        challenges: [
+          {
+            name: 'question',
+            options: {
+              // undefined answer will cause challenge to throw
+              answer: undefined
+            },
+          },
+        ]
+      },
+      plebbit: await Plebbit()
+    }
+
+    const challengeRequestMessage = {
+      publication: {author: {address: getRandomAddress()}},
+    }
+    const shouldNotCall = async () => {
+      throw Error('should not call')
+    }
+
+    let challengeVerification, getChallengeError
+    try {
+      challengeVerification = await getChallengeVerification(challengeRequestMessage, subplebbit, shouldNotCall)
+    }
+    catch (e) {
+      getChallengeError = e
+    }
+    expect(getChallengeError).to.not.equal(undefined)
+    // the error should say something about the answer option missing
+    expect(getChallengeError.message.match(/answer/i)).to.not.equal(undefined)
+    expect(challengeVerification).to.equal(undefined)
   })
 
   it("getChallengeVerificationFromChallengeAnswers", async () => {

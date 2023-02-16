@@ -378,7 +378,9 @@ const subplebbits = [
   passwordChallegeSubplebbit,
   excludeFriendlySubKarmaChallegeSubplebbit,
   twoOutOf4SuccessChallegeSubplebbit,
-  twoOutOf4SuccessInverseChallegeSubplebbit
+  twoOutOf4SuccessInverseChallegeSubplebbit,
+  // rateLimitChallegeSubplebbit,
+  // rateLimitChallengeFailureChallegeSubplebbit
 ]
 
 const results = {
