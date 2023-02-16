@@ -10,7 +10,9 @@ const {
   testPost
 } = require('./utils')
 
-const rateLimiters = new QuickLRU({maxSize: 10000})
+// each author could have 20+ rate limiters each if the sub has
+// several rate limit rules so keep a large cache
+const rateLimiters = new QuickLRU({maxSize: 50000})
 
 const getRateLimiterName = (exclude, publication, publicationType, challengeSuccess) => `${publication.author.address}-${exclude.rateLimit}-${publicationType}-${challengeSuccess}`
 
