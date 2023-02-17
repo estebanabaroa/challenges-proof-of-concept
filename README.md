@@ -34,7 +34,7 @@ SubplebbitChallengeSettings { // the private settings of the challenge (subplebb
 }
 ChallengeFile { // the result of the function exported by the challenge file
   optionInputs?: OptionInput[] // the options inputs fields to display to the user
-  type: 'image' | 'text' | 'audio' | 'video' | 'html'
+  type: 'image/png' | 'text/plain' | 'chain/<chainTicker>'
   challenge?: string // some challenges can be static and asked before the user publishes, like a password for example
   description?: string // describe what the challenge does to display in the UI
   getChallenge: GetChallengeFunction
@@ -45,7 +45,7 @@ GetChallengeFunction {
 Challenge { // if the result of a challenge can't be optained by getChallenge(), return a challenge
   challenge: string // e.g. '2 + 2'
   verify: async (answer: string): ChallengeResult
-  type: 'image' | 'text' | 'audio' | 'video' | 'html'
+  type: 'image/png' | 'text/plain' | 'chain/<chainTicker>'
 }
 ChallengeResult { // if the result of a challenge can be optained by getChallenge, return the result
   success?: boolean
