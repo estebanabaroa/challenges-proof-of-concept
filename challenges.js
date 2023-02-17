@@ -111,7 +111,7 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
     const subplebbitChallenge = getSubplebbitChallengeFromSubplebbitChallengeSettings(subplebbitChallengeSettings)
 
     // exclude author from challenge based on the subplebbit minimum karma settings
-    if (shouldExcludePublication(subplebbitChallenge, challengeRequestMessage.publication)) {
+    if (shouldExcludePublication(subplebbitChallenge, challengeRequestMessage.publication, subplebbit)) {
       continue
     }
     if (await shouldExcludeChallengeCommentCids(subplebbitChallenge, challengeRequestMessage, subplebbit.plebbit)) {

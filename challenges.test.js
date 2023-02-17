@@ -47,9 +47,12 @@ describe("getPendingChallengesOrChallengeVerification", () => {
           challengeAnswers: challengeAnswers[author.address]?.[subplebbit.title]
         }
 
-        const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
+        // get the expected results from fixtures
         const expectedChallengeResult = results[subplebbit?.title]?.[author?.address]
-        // console.dir({challengeResult, expectedChallengeResult}, {depth: null}) // debug the tests
+        const challengeResult = await getPendingChallengesOrChallengeVerification(challengeRequestMessage, subplebbit)
+        // console.dir({challengeResult, expectedChallengeResult}, {depth: null}) // debug fixtures results
+
+        expect(expectedChallengeResult).to.not.equal(undefined)
         expect(challengeResult.challengeSuccess).to.equal(expectedChallengeResult.challengeSuccess)
         expect(challengeResult.challengeErrors).to.deep.equal(expectedChallengeResult.challengeErrors)
         expect(challengeResult.pendingChallenges?.length).to.equal(expectedChallengeResult.pendingChallenges?.length)

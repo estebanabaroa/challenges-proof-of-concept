@@ -8,22 +8,35 @@ const testFirstCommentTimestamp = (excludeTime, authorFirstCommentTimestamp) => 
 const isVote = (publication) => publication.vote !== undefined && publication.commentCid
 const isReply = (publication) => publication.parentCid && !publication.commentCid
 const isPost = (publication) => !publication.parentCid && !publication.commentCid
-const testIs = (excludePublicationType, publication, isFunction) => {
+
+// boilerplate function to test if an exclude of a specific publication type passes
+const testType = (excludePublicationType, publication, isType) => {
   if (excludePublicationType === undefined) return true
   if (excludePublicationType === true) {
-    if (isFunction(publication)) return true
+    if (isType(publication)) return true
     else return false
   }
   if (excludePublicationType === false) {
-    if (isFunction(publication)) return false
+    if (isType(publication)) return false
     else return true
   }
   // excludePublicationType is invalid, return true
   return true
 }
-const testVote = (excludeVote, publication) => testIs(excludeVote, publication, isVote)
-const testReply = (excludeReply, publication) => testIs(excludeReply, publication, isReply)
-const testPost = (excludePost, publication) => testIs(excludePost, publication, isPost)
+const testVote = (excludeVote, publication) => testType(excludeVote, publication, isVote)
+const testReply = (excludeReply, publication) => testType(excludeReply, publication, isReply)
+const testPost = (excludePost, publication) => testType(excludePost, publication, isPost)
+const testRole = (excludeRole, authorAddress, subplebbitRoles) => {
+  if (excludeRole === undefined || subplebbitRoles === undefined) {
+    return true
+  }
+  for (const roleName of excludeRole) {
+    if (subplebbitRoles[authorAddress]?.role === roleName) {
+      return true
+    }
+  }
+  return false
+}
 
 module.exports = {
   isVote, 
@@ -33,5 +46,6 @@ module.exports = {
   testReply,
   testPost,
   testScore,
-  testFirstCommentTimestamp
+  testFirstCommentTimestamp,
+  testRole
 }

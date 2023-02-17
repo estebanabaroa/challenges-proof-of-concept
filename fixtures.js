@@ -313,8 +313,8 @@ const rateLimitChallegeSubplebbit = {
     ]
   }
 }
-const rateLimitChallengeFailureChallegeSubplebbit = {
-  title: 'rate limit challenge failure challenge subplebbit',
+const rateLimitChallengeSuccessChallegeSubplebbit = {
+  title: 'rate limit challenge success challenge subplebbit',
   settings: {
     challenges: [
       {
@@ -332,6 +332,28 @@ const rateLimitChallengeFailureChallegeSubplebbit = {
     ]
   }
 }
+const excludeModsChallegeSubplebbit = {
+  title: 'exclude mods challenge subplebbit',
+  roles: {
+    'high-karma.eth': {
+      role: 'moderator'
+    } 
+  },
+  settings: {
+    challenges: [
+      {
+        name: 'fail',
+        options: {
+          error: `You're not a mod.`
+        },
+        exclude: [
+          {role: ['moderator', 'admin', 'owner']}
+        ]
+      },
+    ]
+  }
+}
+
 // define mock author karma scores and account age
 const subplebbitAuthors = {
   [highKarmaAuthor.address]: {
@@ -372,7 +394,8 @@ const subplebbits = [
   twoOutOf4SuccessChallegeSubplebbit,
   twoOutOf4SuccessInverseChallegeSubplebbit,
   rateLimitChallegeSubplebbit,
-  rateLimitChallengeFailureChallegeSubplebbit
+  rateLimitChallengeSuccessChallegeSubplebbit,
+  excludeModsChallegeSubplebbit
 ]
 
 const results = {
@@ -488,12 +511,21 @@ const results = {
       ]
     }
   },
-  [rateLimitChallengeFailureChallegeSubplebbit.title]: {
+  [rateLimitChallengeSuccessChallegeSubplebbit.title]: {
     [highKarmaAuthor.address]: {
       challengeSuccess: true
     },
     [lowKarmaAuthor.address]: {
       challengeSuccess: true
+    }
+  },
+  [excludeModsChallegeSubplebbit.title]: {
+    [highKarmaAuthor.address]: {
+      challengeSuccess: true
+    },
+    [lowKarmaAuthor.address]: { 
+      challengeSuccess: false, 
+      challengeErrors: [ "You're not a mod." ]
     }
   }
 }

@@ -6,11 +6,12 @@ const {
   testReply,
   testPost,
   testScore,
-  testFirstCommentTimestamp
+  testFirstCommentTimestamp,
+  testRole
 } = require('./utils')
 const {testRateLimit} = require('./rate-limiter')
 
-const shouldExcludePublication = (subplebbitChallenge, publication) => {
+const shouldExcludePublication = (subplebbitChallenge, publication, subplebbit) => {
   if (!subplebbitChallenge || typeof subplebbitChallenge !== 'object') {
     throw Error(`shouldExcludePublication invalid subplebbitChallenge argument '${subplebbitChallenge}'`)
   }
@@ -37,7 +38,8 @@ const shouldExcludePublication = (subplebbitChallenge, publication) => {
       exclude.post === undefined &&
       exclude.reply === undefined &&
       exclude.vote === undefined &&
-      exclude.rateLimit === undefined
+      exclude.rateLimit === undefined &&
+      !exclude.role?.length
     ) {
       continue
     }
@@ -67,6 +69,9 @@ const shouldExcludePublication = (subplebbitChallenge, publication) => {
       shouldExclude = false
     }
     if (exclude.address && !exclude.address.includes(author.address)) {
+      shouldExclude = false
+    }
+    if (!testRole(exclude.role, publication.author.address, subplebbit?.roles)) {
       shouldExclude = false
     }
 
