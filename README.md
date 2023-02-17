@@ -82,6 +82,34 @@ OptionInput {
 }
 ```
 
+#### How to use:
+
+```js
+const {getChallengeVerification} = require('./challenges')
+
+const getChallengeAnswers = async (challenges) => {
+  // ...get challenge answers from user
+  return challengeAnswers
+}
+
+let challengeVerification
+try {
+  challengeVerification = await getChallengeVerification(challengeRequest, subplebbit, getChallengeAnswers)
+}
+// getChallengeVerification will throw if one of the getChallenge function throws, which indicates a bug with the challenge script
+catch (e) {
+  // notify the sub owner that that one of his challenge is misconfigured via an error event
+  subplebbit.emit('error', e.message)
+
+  // notify the author that his publication wasn't published because the subplebbit is misconfigured
+  challengeVerification = {
+    challengeSuccess: false,
+    reason: `One of the subplebbit challenges is misconfigured: ${e.message}`
+  }
+}
+```
+
 #### Ideas:
+
 - interface so that the sub owner can display on publication.author.subplebbit the amount paid by the user for payment challenges
 - "standard" challenges like "fail" and "evm-contract-call" so that the frontend could calculate the exclude and result of the challenge to see if the author passes it before even publishing
