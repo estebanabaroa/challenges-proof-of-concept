@@ -5,28 +5,32 @@ const optionInputs = [
     label: 'chainTicker',
     default: 'eth',
     description: 'The chain ticker',
-    placeholder: 'eth'
+    placeholder: 'eth',
+    required: true
   },
   {
     option: 'address',
     label: 'Address',
     default: '',
     description: 'The contract address.',
-    placeholder: '0x...'
+    placeholder: '0x...',
+    required: true
   },
   {
     option: 'abi',
     label: 'ABI',
     default: '',
     description: 'The ABI of the contract method.',
-    placeholder: '{"constant":true,"inputs":[{"internalType":"address","name":"account...'
+    placeholder: '{"constant":true,"inputs":[{"internalType":"address","name":"account...',
+    required: true
   },
   {
     option: 'condition',
     label: 'Condition',
     default: '',
     description: 'The condition the contract call response must pass.',
-    placeholder: '>1000'
+    placeholder: '>1000',
+    required: true
   },
   {
     option: 'error',

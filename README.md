@@ -71,7 +71,6 @@ ExcludeSubplebbit { // singular because it only has to match 1 subplebbit
   postScore?: number
   postReply?: number
   firstCommentTimestamp?: number // exclude if author account age is greater or equal than now - firstCommentTimestamp
-  role?: string[] // exclude challenge if author.role.role = one of the string, singular because it only has to match 1 role
 }
 OptionInput {
   option: string // option property name, e.g. characterCount
@@ -79,6 +78,7 @@ OptionInput {
   default: string // option default value, e.g. 10
   description?: string // e.g. Amount of characters of the captcha
   placeholder?: string // the value to display if the input field is empty, e.g. 10
+  required?: boolean // the option is required, the challenge will throw without it
 }
 ```
 

@@ -1,10 +1,18 @@
 const optionInputs = [
+{
+    option: 'question',
+    label: 'Question',
+    default: '',
+    description: 'The question to answer.',
+    placeholder: '',
+  },
   {
     option: 'answer',
     label: 'Answer',
     default: '',
     description: 'The answer to the question.',
-    placeholder: ''
+    placeholder: '',
+    required: true
   }
 ]
 
