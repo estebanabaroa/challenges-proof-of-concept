@@ -9,24 +9,28 @@ const optionInputs = [
     label: 'chainTicker',
     default: '',
     description: '',
+    required: true
   },
   {
     option: 'contractAddress',
     label: 'contractAddress',
     default: '',
     description: '',
+    required: true
   },
   {
     option: 'recipientAddress',
     label: 'recipientAddress',
     default: '',
     description: 'The address to send the payments to.',
+    required: true
   },
   {
     option: 'symbol',
     label: 'symbol',
     default: '',
     description: 'The ticker of the token.',
+    required: true
   },
   {
     option: 'decimals',
