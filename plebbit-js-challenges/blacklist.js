@@ -19,7 +19,7 @@ const type = 'text'
 
 const description = 'Blacklist author addresses.'
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   // add a custom error message to display to the author
   const error = subplebbitChallengeSettings?.options?.error
   const blacklist = subplebbitChallengeSettings?.options?.blacklist?.split(',')

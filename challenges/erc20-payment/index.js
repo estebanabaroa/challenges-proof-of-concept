@@ -94,7 +94,7 @@ const incrementSpentAuthorCredits = async (authorAddress, amount) => {
   // mock incrementing the total spent credit by the author
 }
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   let {chainTicker, contractAddress, recipientAddress, symbol, decimals, postPrice, replyPrice, votePrice} = subplebbitChallengeSettings?.options || {}
   if (!chainTicker) {
     throw Error('missing option chainTicker')

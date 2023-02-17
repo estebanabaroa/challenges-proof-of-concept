@@ -42,7 +42,7 @@ const getChallengeString = (minNumber, maxNumber, operators) => {
   return `${firstNumber} ${operator} ${secondNumber}`
 }
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   let difficulty = subplebbitChallengeSettings?.options?.difficulty
   if (!difficulty) {
   	difficulty = '1'

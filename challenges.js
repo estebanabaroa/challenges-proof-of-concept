@@ -87,13 +87,10 @@ const getPendingChallengesOrChallengeVerification = async (challengeRequestMessa
       validateChallengeFile(challengeFile, challengeIndex, subplebbit)
     }
 
-    // we don't have the challenge answer message yet
-    const challengeAnswerMessage = undefined
-
     let challengeResult, getChallengeError
     try {
       // the getChallenge function could throw
-      challengeResult = await challengeFile.getChallenge(subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex)
+      challengeResult = await challengeFile.getChallenge(subplebbitChallengeSettings, challengeRequestMessage, challengeIndex)
     }
     catch (e) {
       getChallengeError = e

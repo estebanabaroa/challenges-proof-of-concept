@@ -74,7 +74,7 @@ const conditionHasUnsafeCharacters = (condition) => {
   return unsafeCharacters !== ''
 }
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   let {chainTicker, address, abi, condition, error} = subplebbitChallengeSettings?.options || {}
 
   if (!chainTicker) {

@@ -20,14 +20,14 @@ const type = 'text'
 
 const description = `Ask a question, like 'What is the password?'`
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   let answer = subplebbitChallengeSettings?.options?.answer
   if (!answer) {
     throw Error('no option answer')
   }
 
   // use the answer preincluded in the challenge request when possible
-  const challengeAnswer = challengeRequestMessage?.challengeAnswers?.[challengeIndex] || challengeAnswerMessage?.challengeAnswers?.[challengeIndex]
+  const challengeAnswer = challengeRequestMessage?.challengeAnswers?.[challengeIndex]
 
   // the author didn't preinclude his answer, so send him a pubsub challenge message
   if (challengeAnswer === undefined) {

@@ -14,7 +14,7 @@ const type = 'text'
 
 const description = 'A challenge that automatically fails with a custom error message.'
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   // add a custom error message to display to the author
   const error = subplebbitChallengeSettings?.options?.error
 

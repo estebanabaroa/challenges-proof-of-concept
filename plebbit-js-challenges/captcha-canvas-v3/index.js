@@ -35,7 +35,7 @@ const optionInputs = [
 
 const type = 'image'
 
-const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeAnswerMessage, challengeIndex) => {
+const getChallenge = async (subplebbitChallengeSettings, challengeRequestMessage, challengeIndex) => {
   // setCaptchaOptions https://captcha-canvas.js.org/global.html#SetCaptchaOptions
   const setCaptchaOptions = {}
 

@@ -40,7 +40,7 @@ ChallengeFile { // the result of the function exported by the challenge file
   getChallenge: GetChallengeFunction
 }
 GetChallengeFunction {
-  (challenge: SubplebbitChallengeSettings, challengeRequest: ChallengeRequestMessage, challengeAnswer: ChallengeAnswerMessage): Challenge | ChallengeResult
+  (challenge: SubplebbitChallengeSettings, challengeRequest: ChallengeRequestMessage, challengeIndex: number): Challenge | ChallengeResult
 }
 Challenge { // if the result of a challenge can't be optained by getChallenge(), return a challenge
   challenge: string // e.g. '2 + 2'
